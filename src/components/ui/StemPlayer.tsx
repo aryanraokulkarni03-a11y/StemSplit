@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Download } from 'lucide-react';
 import { StemResult, STEM_CONFIG } from '@/types/audio';
 import { formatDuration } from '@/lib/audio-utils';
+import { WaveformVisualizer } from './WaveformVisualizer';
 
 interface StemPlayerProps {
     stem: StemResult;
@@ -88,6 +89,13 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
         }
     }, []);
 
+    const handleWaveformSeek = useCallback((time: number) => {
+        setCurrentTime(time);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    }, []);
+
     const handleDownload = useCallback(() => {
         if (!stem.blob) return;
 
@@ -136,26 +144,27 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
                 </button>
             </div>
 
-            {/* Progress Bar */}
+            {/* Waveform Visualization */}
             <div className="mb-4">
-                <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                        className="absolute left-0 top-0 h-full rounded-full transition-all"
-                        style={{
-                            width: `${progress}%`,
-                            backgroundColor: config.color
-                        }}
+                {stem.url ? (
+                    <WaveformVisualizer
+                        audioUrl={stem.url}
+                        color={config.color}
+                        height={48}
+                        currentTime={currentTime}
+                        onSeek={handleWaveformSeek}
                     />
-                </div>
-                <input
-                    type="range"
-                    min={0}
-                    max={duration || 0}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
-                    style={{ position: 'relative', marginTop: '-8px' }}
-                />
+                ) : (
+                    <div className="relative h-12 bg-white/10 rounded-lg overflow-hidden">
+                        <div
+                            className="absolute left-0 top-0 h-full rounded-lg transition-all"
+                            style={{
+                                width: `${progress}%`,
+                                backgroundColor: config.color
+                            }}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Controls */}
