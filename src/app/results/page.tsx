@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Music2, ArrowLeft, Upload, CheckCircle2, Sparkles } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function ResultsPage() {
     const [loading, setLoading] = useState(true);
     const [originalFileName, setOriginalFileName] = useState<string>('');
 
-    const loadResults = useCallback(() => {
+    useEffect(() => {
         // Get results from sessionStorage
         const resultsStr = sessionStorage.getItem('stemResults');
         const fileInfoStr = sessionStorage.getItem('audioFile');
@@ -59,10 +59,6 @@ export default function ResultsPage() {
             router.push('/');
         }
     }, [router]);
-
-    useEffect(() => {
-        loadResults();
-    }, [loadResults]);
 
     const handleProcessAnother = () => {
         // Clear session storage

@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "stemsplit-app",
+    "projectPath": "c:\\Users\\HP\\Documents\\AI\\Singscape\\stemsplit-app",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-1G3SOi3bM8N7tDEtvMJgPgjEVmZhV8W0N6gFpKfiY4cBJeuLT0OnE8zOyPIjL78AGQ3Z0auNESX-LuiI3b_UhptRaNqkQ4cxEyZlqyk8R4ZWXnOvGIhJdsBV0EjKR1fQBUU"
+    }
+  },
+  "serverPort": 62806,
+  "proxy": "http://c6c108c1-1aaf-4784-b7d8-f447c222dee9:HkwL2C3KjjdMwfIUdU07pm3mUprw5tdV@tun.testsprite.com:8080"
+}

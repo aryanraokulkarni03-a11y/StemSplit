@@ -1,0 +1,82 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "Next.js 14 (App Router)",
+        "React 19",
+        "TailwindCSS",
+        "Radix UI",
+        "Lucide React Icons",
+        "ONNX Runtime Web"
+    ],
+    "features": [
+        {
+            "name": "FileUpload",
+            "description": "Drag-and-drop audio file upload component with validation for file type (MP3, WAV) and size (max 10MB). Shows file preview with name, size, and detected duration.",
+            "files": [
+                "src/components/ui/FileUpload.tsx",
+                "src/types/audio.ts"
+            ]
+        },
+        {
+            "name": "ProgressBar",
+            "description": "Animated progress bar component showing processing status, percentage, and estimated time remaining. Includes cancel functionality.",
+            "files": [
+                "src/components/ui/ProgressBar.tsx",
+                "src/types/audio.ts"
+            ]
+        },
+        {
+            "name": "StemPlayer",
+            "description": "Audio player component for individual stems with play/pause, volume control, mute toggle, seek bar, and download functionality. Color-coded by stem type.",
+            "files": [
+                "src/components/ui/StemPlayer.tsx",
+                "src/types/audio.ts"
+            ]
+        },
+        {
+            "name": "StemGrid",
+            "description": "Grid layout displaying all 4 stem players (vocals, drums, bass, other) with a download-all button.",
+            "files": [
+                "src/components/ui/StemPlayer.tsx"
+            ]
+        },
+        {
+            "name": "AudioUtils",
+            "description": "Utility functions for audio processing including file loading, buffer conversion, WAV export, duration formatting, and simulated stem separation.",
+            "files": [
+                "src/lib/audio-utils.ts"
+            ]
+        },
+        {
+            "name": "Homepage",
+            "description": "Main landing page with hero section, file upload area, features showcase, how-it-works section, and call-to-action.",
+            "files": [
+                "src/app/page.tsx",
+                "src/app/layout.tsx",
+                "src/app/globals.css"
+            ]
+        },
+        {
+            "name": "ProcessPage",
+            "description": "Processing page showing animated progress while AI separates audio into stems. Displays current extraction status and redirects to results when complete.",
+            "files": [
+                "src/app/process/page.tsx"
+            ]
+        },
+        {
+            "name": "ResultsPage",
+            "description": "Results page displaying separated stems with individual players, usage tips, and options to download or process another file.",
+            "files": [
+                "src/app/results/page.tsx"
+            ]
+        },
+        {
+            "name": "Layout",
+            "description": "Header and footer components with navigation, branding, and GitHub link. Responsive design with mobile menu.",
+            "files": [
+                "src/components/layout/index.tsx",
+                "src/app/layout.tsx"
+            ]
+        }
+    ]
+}
