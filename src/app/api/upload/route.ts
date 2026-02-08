@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FILE_CONSTRAINTS } from '@/types/audio';
 
-export const runtime = 'edge'; // Enable edge runtime for better performance
+export const runtime = 'nodejs'; // Use Node.js runtime for compatibility with fileops
 
 // POST /api/upload - Validate and prepare audio file for processing
 export async function POST(request: NextRequest) {

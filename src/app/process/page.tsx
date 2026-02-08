@@ -160,8 +160,7 @@ export default function ProcessPage() {
                 {/* Header */}
                 <div className="text-center mb-16">
                     <div className="inline-block relative">
-                        <div className="absolute inset-0 bg-cyan-500/20 blur-3xl animate-pulse-slow rounded-full" />
-                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center relative z-10 shadow-2xl animate-float">
+                        <div className="w-24 h-24 bg-primary flex items-center justify-center relative z-10 shadow-[4px_4px_0px_white] transition-transform hover:-translate-y-1">
                             <Music2 className="w-12 h-12 text-white" />
                         </div>
                     </div>
@@ -181,7 +180,7 @@ export default function ProcessPage() {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="glass backdrop-blur-2xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                <div className="brutalist-card p-8">
 
                     {/* Error State */}
                     {error ? (
@@ -219,11 +218,10 @@ export default function ProcessPage() {
                                         <div
                                             key={key}
                                             className={`
-                                                relative overflow-hidden rounded-2xl p-6 transition-all duration-500
-                                                ${isActive ? 'bg-white/10 scale-105 shadow-[0_0_30px_rgba(255,255,255,0.05)] border-white/20' : ''}
-                                                ${isComplete ? 'bg-white/5 border-emerald-500/30' : 'border-white/5'}
-                                                ${isWaiting ? 'opacity-40 grayscale' : 'opacity-100'}
-                                                border
+                                                relative overflow-hidden p-6 transition-all duration-200 border
+                                                ${isActive ? 'bg-zinc-900 shadow-[2px_2px_0px_white] border-primary' : 'border-zinc-800'}
+                                                ${isComplete ? 'bg-zinc-900/50 border-primary' : ''}
+                                                ${isWaiting ? 'opacity-40' : 'opacity-100'}
                                             `}
                                         >
                                             {/* Glow Background */}
@@ -237,7 +235,7 @@ export default function ProcessPage() {
                                             <div className="relative z-10 flex flex-col items-center">
                                                 <div
                                                     className={`
-                                                        w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all
+                                                        w-12 h-12 flex items-center justify-center mb-3 transition-all border border-current
                                                         ${isActive ? 'scale-110' : ''}
                                                     `}
                                                     style={{

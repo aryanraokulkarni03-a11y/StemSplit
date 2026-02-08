@@ -1,359 +1,499 @@
 [
   {
     "id": "TC001",
-    "title": "File Upload Success with Valid MP3 File",
-    "description": "Verify that the application accepts a valid MP3 file under 10MB uploaded via drag-and-drop and shows correct file preview.",
+    "title": "Valid audio file upload via drag-and-drop",
+    "description": "Verify that users can successfully upload an MP3 or WAV file under 25MB by dragging and dropping onto the FileUpload component, and see correct file metadata displayed.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Homepage"
+        "description": "Navigate to homepage"
       },
       {
         "type": "action",
-        "description": "Drag and drop a valid MP3 file smaller than 10MB onto the file upload area"
+        "description": "Drag and drop a valid MP3 file less than 25MB onto the FileUpload component"
       },
       {
         "type": "assertion",
-        "description": "Confirm file preview displays correct file name, size, and duration"
+        "description": "Check that file metadata (name, size, duration) is displayed correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no error message is shown and UI indicates successful upload"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "File Upload Success with Valid WAV File",
-    "description": "Verify that the application accepts a valid WAV file under 10MB uploaded via click-to-upload and shows correct file preview.",
+    "title": "Valid audio file upload via browse dialog",
+    "description": "Verify that users can select a valid MP3 or WAV file under 25MB using the browse dialog, and file metadata displays correctly.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Homepage"
+        "description": "Navigate to homepage"
       },
       {
         "type": "action",
-        "description": "Click file upload area to open file selector and choose a valid WAV file smaller than 10MB"
+        "description": "Click browse button on FileUpload component and select a valid WAV file under 25MB"
       },
       {
         "type": "assertion",
-        "description": "Confirm file preview displays correct file name, size, and duration"
+        "description": "Check that file metadata (name, size, duration) is displayed correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure no error messages appear and upload is accepted"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "File Upload Rejects Invalid File Type",
-    "description": "Verify that uploading a file with an unsupported format (e.g., .txt, .jpg) triggers an error message and does not allow upload.",
+    "title": "Reject unsupported file type upload",
+    "description": "Verify that uploading a file with an unsupported format (e.g., .txt, .pdf) triggers a clear error message and prevents upload.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Homepage"
-      },
-      {
-        "type": "action",
-        "description": "Attempt to upload a file with unsupported file type (e.g., text or image file)"
+        "description": "Attempt to upload a .txt file using drag-and-drop on FileUpload component"
       },
       {
         "type": "assertion",
-        "description": "Check that an error message about invalid file type appears and upload is rejected"
+        "description": "Verify display of clear error message about unsupported file type"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm file is not accepted or processed"
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "File Upload Rejects Oversized File",
-    "description": "Verify that uploading a valid audio file exceeding 10MB triggers an error message preventing the upload.",
+    "title": "Reject audio files exceeding 25MB",
+    "description": "Verify uploading MP3 or WAV files larger than 25MB is blocked with an appropriate error message.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Homepage"
-      },
-      {
-        "type": "action",
-        "description": "Try to upload a valid MP3 or WAV file larger than 10MB"
+        "description": "Attempt to upload a valid MP3 file larger than 25MB via browse dialog"
       },
       {
         "type": "assertion",
-        "description": "Verify an error message about file size limit is shown and upload is rejected"
+        "description": "Confirm error message states file exceeds maximum size"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure file is not accepted for processing"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Start Audio Separation Processing",
-    "description": "Verify that clicking 'Separate Audio' after valid file upload navigates to Processing Page and starts simulated AI stem extraction with progress displayed.",
+    "title": "Processing page shows accurate state transitions and progress",
+    "description": "Verify the processing page correctly transitions through states: pending → processing → complete, with accurate progress bars and stem processing statuses.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Upload valid MP3 or WAV file under 10MB on Homepage"
-      },
-      {
-        "type": "action",
-        "description": "Click 'Separate Audio' button"
+        "description": "Upload valid audio file and start processing"
       },
       {
         "type": "assertion",
-        "description": "Check navigation to Processing Page showing animated progress bar and current stem extraction status"
+        "description": "Check processing page shows pending state initially"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify progress bars update realistically with visual feedback during processing"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm each stem's status updates from pending to processing to complete"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure page redirects to results page on completion"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Progress Bar Displays Correct Percentage and Stem Status",
-    "description": "Verify that ProgressBar component animates processing progress with correct percentage, current stem extraction name, and estimated time remaining updates.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "On Processing Page, monitor progress bar during stem extraction simulation"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify progress percentage increments correctly over time"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify current stem extraction label updates accurately as each stem is processed"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify estimated time remaining updates realistically during processing"
-      }
-    ]
-  },
-  {
-    "id": "TC007",
-    "title": "Cancel Processing Returns to Homepage",
-    "description": "Verify that clicking the cancel button on Processing Page aborts the stem extraction simulation and navigates back to the Homepage.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Start audio processing on Processing Page"
-      },
-      {
-        "type": "action",
-        "description": "Click the cancel button while processing is ongoing"
-      },
-      {
-        "type": "assertion",
-        "description": "Check that the processing stops and the app navigates back to Homepage"
-      }
-    ]
-  },
-  {
-    "id": "TC008",
-    "title": "Results Page Displays All Four Stem Players",
-    "description": "Verify that upon processing completion, Results Page loads showing four color-coded StemPlayers for vocals, drums, bass, and other.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Complete audio separation processing to navigate to Results Page"
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm presence of four StemPlayer components with correct colors: sky blue for vocals, emerald green for drums, amber for bass, pink for other"
-      }
-    ]
-  },
-  {
-    "id": "TC009",
-    "title": "StemPlayer Playback Controls Functionality",
-    "description": "Verify that each StemPlayer supports play/pause, volume adjustment, mute toggle, and seek functionality for its stem audio.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "On Results Page, select each StemPlayer one by one"
-      },
-      {
-        "type": "action",
-        "description": "Use play button to start stem playback"
-      },
-      {
-        "type": "assertion",
-        "description": "Check that audio plays correctly"
-      },
-      {
-        "type": "action",
-        "description": "Pause playback and verify audio stops"
-      },
-      {
-        "type": "action",
-        "description": "Adjust volume control slider and verify volume changes"
-      },
-      {
-        "type": "action",
-        "description": "Toggle mute button and verify audio is muted/unmuted"
-      },
-      {
-        "type": "action",
-        "description": "Use seek bar to move playback position and confirm audio jumps accordingly"
-      }
-    ]
-  },
-  {
-    "id": "TC010",
-    "title": "Download Individual Stem Files",
-    "description": "Verify that clicking download button on each StemPlayer downloads the correct stem audio file.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "On Results Page, click download button on each StemPlayer component"
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm that respective stem audio file is downloaded with appropriate file name"
-      }
-    ]
-  },
-  {
-    "id": "TC011",
-    "title": "Download All Stems Button Downloads All Files",
-    "description": "Verify that clicking 'Download All Stems' button downloads all four stem audio files as a batch successfully.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "On Results Page, click the 'Download All Stems' button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify that a batch download or archive including all four stem audio files starts correctly"
-      }
-    ]
-  },
-  {
-    "id": "TC012",
-    "title": "Process Another File Resets State and Navigates to Homepage",
-    "description": "Verify that clicking 'Process Another File' resets application state and navigates to Homepage ready for new upload.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "On Results Page, click 'Process Another File' button"
-      },
-      {
-        "type": "assertion",
-        "description": "Check navigation to Homepage and that previous state is cleared allowing new file upload"
-      }
-    ]
-  },
-  {
-    "id": "TC013",
-    "title": "Ensure All Audio Processing Occurs Client-Side",
-    "description": "Verify that no audio data is transmitted to the server during file upload and stem extraction simulations, ensuring privacy compliance.",
-    "category": "security",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Upload a valid audio file and start processing"
-      },
-      {
-        "type": "assertion",
-        "description": "Monitor network activity to confirm no audio file or stem data is sent to any server"
-      }
-    ]
-  },
-  {
-    "id": "TC014",
-    "title": "Responsive Design on Mobile Devices",
-    "description": "Verify that Homepage, Processing Page, and Results Page layout and functionality adapt correctly to various mobile screen sizes.",
-    "category": "ui",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Open the app on different mobile devices or use browser emulation for mobile screen sizes"
-      },
-      {
-        "type": "assertion",
-        "description": "Check that file upload area, progress bar, stem players, buttons, header, and footer are fully visible and usable without layout issues"
-      }
-    ]
-  },
-  {
-    "id": "TC015",
-    "title": "Responsive Design on Desktop Devices",
-    "description": "Verify the UI components render and function correctly on standard desktop screen resolutions.",
-    "category": "ui",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Open the app on desktop browser"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify Homepage hero, file upload, Processing Page progress bar, Results Page stem grid, and header/footer display correctly and controls function as expected"
-      }
-    ]
-  },
-  {
-    "id": "TC016",
-    "title": "Error Message Display for Invalid File Upload Attempts",
-    "description": "Verify that invalid file upload attempts display clear error messages and prevent further action until corrected.",
+    "title": "Retry function works after processing failure",
+    "description": "Verify that if the audio separation process fails, user can retry and processing restarts with all progress and states reset.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Attempt to upload invalid file type or oversized files on Homepage"
+        "description": "Upload a valid audio file and simulate a processing failure (e.g., via mocked API response)"
       },
       {
         "type": "assertion",
-        "description": "Validate that appropriate error messages appear near file upload area and the 'Separate Audio' button remains disabled"
-      }
-    ]
-  },
-  {
-    "id": "TC017",
-    "title": "Verify Playback Controls Accessibility",
-    "description": "Verify that playback controls on StemPlayers are accessible via keyboard navigation and screen readers for better accessibility.",
-    "category": "ui",
-    "priority": "Medium",
-    "steps": [
+        "description": "Check error message is displayed with retry option"
+      },
       {
         "type": "action",
-        "description": "On Results Page, navigate StemPlayer controls using keyboard tabbing"
+        "description": "Click retry button"
       },
       {
         "type": "assertion",
-        "description": "Confirm focus on each control (play/pause, volume, mute, seek, download) and that screen reader announces their labels and states correctly"
+        "description": "Verify processing restarts from pending state with cleared progress bars"
       }
     ]
   },
   {
-    "id": "TC018",
-    "title": "Homepage Loads Hero Section and File Upload Area",
-    "description": "Verify that the Homepage loads successfully with the hero section visible and file upload area ready to accept files.",
+    "id": "TC007",
+    "title": "StemPlayer controls operate correctly for each stem",
+    "description": "Verify play/pause, volume control, waveform seek, and download functionality on each StemPlayer component for vocals, drums, bass, and other stems.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the Homepage URL"
+        "description": "On results page, locate all 4 StemPlayer components"
+      },
+      {
+        "type": "action",
+        "description": "For each stem player, click play and confirm audio plays"
+      },
+      {
+        "type": "action",
+        "description": "Adjust volume slider and confirm volume changes accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Click on different points on waveform visualizer and confirm seek position changes"
+      },
+      {
+        "type": "action",
+        "description": "Click download button on each stem and verify correct file is downloaded"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "WaveformVisualizer supports click-to-seek and shows playback progress",
+    "description": "Verify that waveform visualization accurately reflects audio waveform, updates playback progress visually, and supports click-to-seek interaction.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Start playback of a stem with WaveformVisualizer displayed"
       },
       {
         "type": "assertion",
-        "description": "Check that the hero section text and images are visible and the file upload area is displayed and interactive"
+        "description": "Confirm waveform visualization animates to show playback progress"
+      },
+      {
+        "type": "action",
+        "description": "Click on various points of waveform and verify player seeks to corresponding audio position"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Results page UI displays four stems in grid with download all button",
+    "description": "Verify that the results page layout presents all four stems in a grid with individual StemPlayer components and a functional 'Download All' button that downloads all stems sequentially.",
+    "category": "ui",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete processing workflow and arrive at results page"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm four stem players (vocals, drums, bass, other) are visible in grid layout"
+      },
+      {
+        "type": "assertion",
+        "description": "Locate and click the 'Download All' button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that all four stems are downloaded sequentially without errors"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Navigation header is fixed, responsive, with functional hamburger menu",
+    "description": "Verify navigation header remains fixed on scroll, responds to different screen sizes properly, and mobile hamburger menu opens and closes navigation links.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load any main page (homepage, processing, results)"
+      },
+      {
+        "type": "assertion",
+        "description": "Scroll page and confirm header remains fixed at top"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify header contents appear as per Brutalist branding"
+      },
+      {
+        "type": "action",
+        "description": "Resize browser to mobile viewport size"
+      },
+      {
+        "type": "action",
+        "description": "Click hamburger menu button"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm navigation menu expands and links are accessible"
+      },
+      {
+        "type": "action",
+        "description": "Click hamburger menu to close it"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm menu collapses properly"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Homepage hero and feature sections render with smooth scroll navigation",
+    "description": "Verify the homepage hero section uses large typography and Brutalist style, feature grid displays all key features, and navigation links smoothly scroll to page sections.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to homepage"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm hero section shows massive typography and Brutalist styling"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify feature showcase grid displays all major features"
+      },
+      {
+        "type": "action",
+        "description": "Click navigation links in header"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm page smoothly scrolls to correct section"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "API health check endpoint returns correct status",
+    "description": "Verify the health check API returns JSON with API availability and backend readiness status, and appropriate HTTP status code.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send HTTP GET request to /api/health endpoint"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm response HTTP status is 200"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify JSON response includes keys 'status' and 'backendReady'"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "File upload API validates file type and size correctly",
+    "description": "Verify /api/upload rejects files of wrong type or size beyond 25MB with appropriate error responses and accepts valid files returning metadata.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send multipart/form-data POST with invalid file type to /api/upload"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm response status is 400 with relevant error message"
+      },
+      {
+        "type": "action",
+        "description": "Send POST with valid MP3 file > 25MB to /api/upload"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm response status is 400 for file size exceeded"
+      },
+      {
+        "type": "action",
+        "description": "Send POST with valid MP3 or WAV file < 25MB to /api/upload"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm response status is 200 and payload contains file metadata"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Audio separation API streams progress JSON and cleans up temp files",
+    "description": "Verify /api/separate correctly triggers Demucs Python process, streams incremental JSON progress updates, and removes temporary files on completion or failure.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send request to /api/separate with valid uploaded file reference"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm streaming of JSON progress updates occurs throughout processing"
+      },
+      {
+        "type": "assertion",
+        "description": "On normal completion verify final JSON message indicates success"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm temporary files are deleted after processing finishes"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Critical user journey: happy path from upload to results",
+    "description": "Verify full user journey from audio upload, processing start, progress observing, to results page with stems playback and download completes without error.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to homepage and upload valid MP3 file under 25MB"
+      },
+      {
+        "type": "action",
+        "description": "Start processing and monitor processing page progress bars and statuses"
+      },
+      {
+        "type": "assertion",
+        "description": "Wait for redirect to results page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify four stem players are present with functional controls"
+      },
+      {
+        "type": "action",
+        "description": "Play each stem briefly"
+      },
+      {
+        "type": "action",
+        "description": "Download individual stems and verify files"
+      },
+      {
+        "type": "action",
+        "description": "Use 'Download All' button and confirm all stems download"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Accessibility: keyboard navigation and screen reader support",
+    "description": "Verify all interactive components (FileUpload, StemPlayers, navigation menu) are fully accessible via keyboard and screen reader compatible with appropriate ARIA labels and color contrast.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Use tab/shift+tab to navigate all interactive elements on homepage and results page"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm focus outlines and correct tab order"
+      },
+      {
+        "type": "assertion",
+        "description": "Validate presence of ARIA roles and labels using accessibility tools"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure color contrast meets WCAG AA standards for all Brutalist colors"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Bundle optimization lazy loads heavy components",
+    "description": "Verify large components like StemPlayer, FileUpload, and WaveformVisualizer are dynamically imported and loaded only when needed, keeping initial bundle size below 1MB.",
+    "category": "performance",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load homepage and measure initial bundle size"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm bundle size is below 1MB"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to processing and results pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that heavy components are loaded dynamically (e.g., via network or dev tools)"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Cross-browser compatibility on latest Chrome, Firefox, Safari, Edge",
+    "description": "Verify key user workflows including file upload, processing, playback, and downloads function properly and UI renders correctly on latest stable versions of Chrome, Firefox, Safari, and Edge browsers.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Repeat main user journey (upload to results) on Chrome latest"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm functionality and UI correctness"
+      },
+      {
+        "type": "action",
+        "description": "Repeat tests on Firefox latest"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm no regressions or visual bugs"
+      },
+      {
+        "type": "action",
+        "description": "Repeat tests on Safari latest"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm full functionality and layout fidelity"
+      },
+      {
+        "type": "action",
+        "description": "Repeat tests on Edge latest"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no errors and UI consistency"
       }
     ]
   }

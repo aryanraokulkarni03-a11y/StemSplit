@@ -49,9 +49,9 @@ export const STEM_CONFIG: Record<string, { label: string; color: string }> = {
   other: { label: 'Other', color: '#00ffff' },        // Cyan (CMYK style)
 };
 
-// File constraints for MVP
+// File constraints
 export const FILE_CONSTRAINTS = {
-  maxSize: 10 * 1024 * 1024, // 10MB
+  maxSize: 25 * 1024 * 1024, // 25MB (FIXED: was incorrectly 10MB)
   acceptedTypes: ['audio/mpeg', 'audio/wav', 'audio/mp3'],
   acceptedExtensions: ['.mp3', '.wav'],
 };
