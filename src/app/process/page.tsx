@@ -20,6 +20,7 @@ export default function ProcessPage() {
 
     useEffect(() => {
         let isCancelled = false;
+        let pollInterval: NodeJS.Timeout;
 
         const runProcessing = async () => {
             // Get file info from sessionStorage
@@ -30,93 +31,123 @@ export default function ProcessPage() {
                 return;
             }
 
-            setStatus({
-                stage: 'loading-model',
-                progress: 5,
-                message: 'Loading AI model...',
-                estimatedTimeRemaining: 120,
-            });
-
-            // Simulate model loading
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            if (isCancelled) return;
-
-            setStatus({
-                stage: 'processing',
-                progress: 15,
-                message: 'Preparing audio...',
-                estimatedTimeRemaining: 100,
-            });
+            const fileInfo = JSON.parse(fileInfoStr);
 
             try {
-                // Create a dummy buffer for simulation if we don't have real data loaded
-                // In a real app we would decode the file here
-                const audioContext = new AudioContext();
-                const dummyBuffer = audioContext.createBuffer(2, 44100 * 10, 44100);
+                // 1. Trigger Separation
+                setStatus({
+                    stage: 'loading-model',
+                    progress: 5,
+                    message: 'Initializing Demucs model...',
+                    estimatedTimeRemaining: 180, // Real AI takes time
+                });
 
-                const stems = await simulateStemSeparation(dummyBuffer, (progress, message, timeRemaining) => {
-                    if (!isCancelled) {
-                        setStatus({
-                            stage: 'processing',
-                            progress: progress,
-                            message: message,
-                            estimatedTimeRemaining: timeRemaining
-                        });
+                const startResponse = await fetch('/api/separate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: fileInfo.name }),
+                });
+
+                if (!startResponse.ok) throw new Error('Failed to start separation job');
+
+                const { jobId, statusEndpoint } = await startResponse.json();
+
+                // 2. Poll Status
+                pollInterval = setInterval(async () => {
+                    if (isCancelled) return;
+
+                    try {
+                        const statusRes = await fetch(statusEndpoint);
+                        if (!statusRes.ok) return; // Skip this tick if network blip
+
+                        const jobStatus = await statusRes.json();
+
+                        if (jobStatus.status === 'processing' || jobStatus.status === 'starting') {
+                            setStatus(prev => ({
+                                ...prev,
+                                stage: 'processing',
+                                progress: jobStatus.progress || prev.progress, // Use reported progress or keep current
+                                message: jobStatus.message || 'Separating stems...',
+                            }));
+                        } else if (jobStatus.status === 'completed') {
+                            clearInterval(pollInterval);
+
+                            // Transform result for UI
+                            // backend returns { stems: { vocals: "path/to/wav", ... } }
+                            const results: StemResult[] = [];
+
+                            // We need to fetch the actual audio buffers to allow playback in the browser
+                            // For MVP, we might just set the URL and load buffer on play?
+                            // The existing StemPlayer expects 'audioBuffer'.
+                            // Let's Load the buffers now (might be heavy) OR refactor Player to load on demand.
+                            // For strict fidelity to current UI, we'll try to load them.
+
+                            setStatus({
+                                stage: 'exporting',
+                                progress: 95,
+                                message: 'Finalizing stems...',
+                            });
+
+                            const stemPaths = jobStatus.stems; // { vocals: "path", ... }
+
+                            // Helper to fetch and decode
+                            const loadStem = async (name: string, relativePath: string) => {
+                                const response = await fetch(`/${relativePath}`); // public folder access
+                                const arrayBuffer = await response.arrayBuffer();
+                                const audioContext = new AudioContext(); // Browser dependent
+                                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                                return { name, audioBuffer, url: `/${relativePath}` };
+                            };
+
+                            const loadedStems = await Promise.all(
+                                Object.entries(stemPaths).map(([name, path]) =>
+                                    loadStem(name, path as string)
+                                )
+                            );
+
+                            loadedStems.forEach(stem => {
+                                results.push({
+                                    name: stem.name as StemResult['name'],
+                                    label: STEM_CONFIG[stem.name].label,
+                                    color: STEM_CONFIG[stem.name].color,
+                                    audioBuffer: stem.audioBuffer,
+                                    url: stem.url,
+                                    blob: audioBufferToWav(stem.audioBuffer),
+                                    isPlaying: false,
+                                    volume: 1
+                                });
+                            });
+
+                            // Store results
+                            const resultsData = results.map(r => ({
+                                name: r.name,
+                                label: r.label,
+                                color: r.color,
+                                url: r.url,
+                            }));
+                            sessionStorage.setItem('stemResults', JSON.stringify(resultsData));
+
+                            setStatus({
+                                stage: 'complete',
+                                progress: 100,
+                                message: 'Processing complete!',
+                            });
+
+                            if (!isCancelled) router.push('/results');
+                        } else if (jobStatus.status === 'failed' || jobStatus.status === 'error') {
+                            throw new Error(jobStatus.error || 'Job failed on backend');
+                        }
+
+                    } catch (pollErr) {
+                        console.error('Polling error', pollErr);
+                        // Don't fail immediately on one poll error, but maybe track consecutive failures
                     }
-                });
-
-                if (isCancelled) return;
-
-                setStatus({
-                    stage: 'exporting',
-                    progress: 95,
-                    message: 'Preparing downloads...',
-                });
-
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Convert Map to array format for storage
-                const results: StemResult[] = [];
-                stems.forEach((buffer, name) => {
-                    // Create blob for download
-                    const blob = audioBufferToWav(buffer);
-                    const url = URL.createObjectURL(blob);
-
-                    results.push({
-                        name: name as StemResult['name'],
-                        label: STEM_CONFIG[name].label,
-                        color: STEM_CONFIG[name].color,
-                        audioBuffer: buffer,
-                        blob,
-                        url,
-                        isPlaying: false,
-                        volume: 1
-                    });
-                });
-
-                // Store results
-                const resultsData = results.map(r => ({
-                    name: r.name,
-                    label: r.label,
-                    color: r.color,
-                    url: r.url,
-                }));
-                sessionStorage.setItem('stemResults', JSON.stringify(resultsData));
-
-                setStatus({
-                    stage: 'complete',
-                    progress: 100,
-                    message: 'Processing complete!',
-                });
-
-                setTimeout(() => {
-                    if (!isCancelled) router.push('/results');
-                }, 1500);
+                }, 2000);
 
             } catch (err) {
                 console.error('Processing error:', err);
                 if (!isCancelled) {
+                    clearInterval(pollInterval);
                     setError(err instanceof Error ? err.message : 'An error occurred during processing');
                     setStatus({
                         stage: 'error',
@@ -132,6 +163,7 @@ export default function ProcessPage() {
 
         return () => {
             isCancelled = true;
+            if (pollInterval) clearInterval(pollInterval);
         };
     }, [router, retryCount]);
 

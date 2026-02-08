@@ -20,90 +20,52 @@ interface StemStatus {
     progress: number;
 }
 
-// POST /api/separate - Initiate stem separation (MVP: returns mock job)
+// POST /api/separate - Initiate REAL stem separation using Demucs
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json() as SeparationRequest;
 
         if (!body.fileName) {
-            return NextResponse.json(
-                { error: 'fileName is required', code: 'MISSING_FILENAME' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'fileName is required' }, { status: 400 });
         }
 
-        // Determine which stems to extract
-        const requestedStems = body.stems || STEM_TYPES;
-        const invalidStems = requestedStems.filter(s => !STEM_TYPES.includes(s as StemType));
-
-        if (invalidStems.length > 0) {
-            return NextResponse.json(
-                {
-                    error: `Invalid stem types: ${invalidStems.join(', ')}`,
-                    code: 'INVALID_STEMS',
-                    validStems: STEM_TYPES
-                },
-                { status: 400 }
-            );
-        }
-
-        // Generate job ID and output path
+        // Generate job ID and paths
         const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const outputDir = path.join(process.cwd(), 'public', 'separated', jobId);
-        // Ensure absolute path for input file (assuming it was uploaded and saved temp)
-        // For MVP, since we don't have a real DB/file store yet, we assume the file is in a temp dir
-        // In a real app, 'fileName' would be a key to a stored file.
-        // Here we mock the input path for demonstration:
+
+        // Input file path (Assumes file was uploaded to public/uploads)
+        // TODO: In Phase 2.1, ensure upload endpoint saves here or use absolute path from upload response
         const inputFilePath = path.join(process.cwd(), 'public', 'uploads', body.fileName);
 
-        // Spawn Python process
+        console.log(`[API] Starting Demucs job ${jobId} for file ${inputFilePath}`);
+
+        // Spawn Python process DETACHED so it survives the request
+        const pythonScript = path.join(process.cwd(), 'backend', 'python', 'worker.py');
+
+        // We use 'python' assuming it's in PATH. If using venv, might need absolute path to venv/Scripts/python
         const pythonProcess = spawn('python', [
-            'backend/python/processor.py',
-            inputFilePath,
-            outputDir,
-            '--stems', '4'
-        ]);
-
-        // Monitor process (Basic fire-and-forget for this endpoint, real status checked via /api/status/:id)
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`[Demucs stdout]: ${data}`);
-            // In a real app, parse this JSON and update DB status
+            pythonScript,
+            '--input', inputFilePath,
+            '--out', outputDir
+        ], {
+            detached: true,
+            stdio: 'ignore' // Ignore stdio to allow unref
         });
 
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`[Demucs stderr]: ${data}`);
-        });
-
-        pythonProcess.on('close', (code) => {
-            console.log(`Demucs process exited with code ${code}`);
-        });
-
-        // Initialize stem statuses
-        const stemStatuses: StemStatus[] = requestedStems.map(stem => ({
-            name: stem as StemType,
-            status: 'pending',
-            progress: 0
-        }));
+        // Unreference the child process so the parent node process can exit independently
+        // This is critical for Vercel/Next.js to not hold the request open
+        pythonProcess.unref();
 
         return NextResponse.json({
             success: true,
             jobId,
-            fileName: body.fileName,
-            stems: stemStatuses,
-            estimatedTime: requestedStems.length * 30,
             statusEndpoint: `/api/separate/${jobId}`,
-            message: 'Separation job started on backend.',
+            message: 'Separation job started in background.',
         });
 
     } catch (error) {
         console.error('Separation error:', error);
-        return NextResponse.json(
-            {
-                error: 'Failed to initiate separation',
-                code: 'SEPARATION_ERROR'
-            },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to initiate separation' }, { status: 500 });
     }
 }
 

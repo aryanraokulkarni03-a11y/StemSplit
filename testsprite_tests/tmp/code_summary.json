@@ -1,131 +1,49 @@
 {
     "tech_stack": [
         "TypeScript",
-        "Next.js 16 (App Router)",
-        "React 19",
-        "Tailwind CSS v4",
+        "Next.js 14 (App Router)",
+        "Tailwind CSS (Brutalist Theme)",
+        "Python (Demucs Backend)",
         "Node.js",
-        "Python (Demucs AI)",
-        "Audio Web APIs"
+        "Radix UI",
+        "Framer Motion"
     ],
     "features": [
         {
-            "name": "FileUpload Component",
-            "description": "Drag-and-drop audio file upload with validation (MP3/WAV, max 25MB). Displays file metadata (name, size, duration) and provides visual feedback with Brutalist design.",
+            "name": "FileUpload",
+            "description": "Drag-and-drop file upload component with 25MB limit and validation.",
             "files": [
-                "src/components/ui/FileUpload.tsx",
-                "src/types/audio.ts"
-            ]
-        },
-        {
-            "name": "Audio Processing Workflow",
-            "description": "Orchestrates the stem separation process. Manages state transitions (pending → processing → complete), displays progress indicators, and handles error recovery with retry functionality.",
-            "files": [
-                "src/app/process/page.tsx",
-                "src/lib/audio-utils.ts"
-            ]
-        },
-        {
-            "name": "StemPlayer Component",
-            "description": "Individual audio player for each separated stem (vocals, drums, bass, other). Features play/pause controls, volume adjustment, seek functionality via waveform, and download capability.",
-            "files": [
-                "src/components/ui/StemPlayer.tsx",
-                "src/types/audio.ts"
-            ]
-        },
-        {
-            "name": "WaveformVisualizer",
-            "description": "Canvas-based waveform visualization using Web Audio API. Shows playback progress with color changes and supports click-to-seek interaction. Lazy-loaded for performance.",
-            "files": [
-                "src/components/ui/WaveformVisualizer.tsx"
-            ]
-        },
-        {
-            "name": "StemGrid Component",
-            "description": "Results page layout displaying all 4 separated stems in a grid. Includes 'Download All' button with sequential download functionality and state management.",
-            "files": [
-                "src/components/ui/StemPlayer.tsx",
-                "src/app/results/page.tsx"
-            ]
-        },
-        {
-            "name": "API - File Upload",
-            "description": "Next.js API route for handling multipart/form-data file uploads. Validates file size, type, and returns file metadata. Edge runtime for fast responses.",
-            "files": [
+                "src/components/FileUpload.tsx",
                 "src/app/api/upload/route.ts"
             ]
         },
         {
-            "name": "API - Audio Separation",
-            "description": "Next.js API route (Node.js runtime) that spawns Python child process to execute Demucs model. Streams JSON progress updates and manages temporary file cleanup.",
+            "name": "StemPlayer",
+            "description": "Audio player for individual stems (vocals, drums, bass, other) with volume and seek controls.",
             "files": [
+                "src/components/StemPlayer.tsx"
+            ]
+        },
+        {
+            "name": "WaveformVisualizer",
+            "description": "Canvas-based waveform visualization synchronized with audio playback.",
+            "files": [
+                "src/components/WaveformVisualizer.tsx"
+            ]
+        },
+        {
+            "name": "ProcessDashboard",
+            "description": "Dashboard showing real-time processing status of audio separation.",
+            "files": [
+                "src/app/process/page.tsx",
                 "src/app/api/separate/route.ts"
             ]
         },
         {
-            "name": "API - Health Check",
-            "description": "Service health endpoint returning JSON status of API availability and backend readiness.",
-            "files": [
-                "src/app/api/health/route.ts"
-            ]
-        },
-        {
-            "name": "Navigation Header",
-            "description": "Fixed top navigation with Brutalist badge logo, responsive menu, and scroll-to-section links. Implements mobile hamburger menu.",
-            "files": [
-                "src/components/layout/index.tsx"
-            ]
-        },
-        {
-            "name": "Homepage Landing",
-            "description": "Hero section with massive typography, feature showcase grid, and 'How It Works' section. Includes CTA buttons and smooth scroll navigation.",
-            "files": [
-                "src/app/page.tsx"
-            ]
-        },
-        {
-            "name": "Results Page",
-            "description": "Post-processing page displaying success message, original filename, 4 stem players, usage tips, and action buttons (Process Another, Back to Home).",
+            "name": "ResultsPage",
+            "description": "Grid layout of stemmed audio players with download capabilities.",
             "files": [
                 "src/app/results/page.tsx"
-            ]
-        },
-        {
-            "name": "Audio Utilities",
-            "description": "Helper functions for audio processing simulation, duration formatting, and mock stem separation with configurable delay and failure rate.",
-            "files": [
-                "src/lib/audio-utils.ts"
-            ]
-        },
-        {
-            "name": "Type Definitions",
-            "description": "TypeScript interfaces for AudioFile, StemResult, ProcessingStatus, and ModelInfo. Includes STEM_CONFIG mapping and FILE_CONSTRAINTS validation rules.",
-            "files": [
-                "src/types/audio.ts"
-            ]
-        },
-        {
-            "name": "Brutalist Design System",
-            "description": "Global CSS defining Brutalist theme with pure black background, Spotify Red primary, hard shadows, zero border-radius, and custom animations (vinyl spin, pulse).",
-            "files": [
-                "src/app/globals.css"
-            ]
-        },
-        {
-            "name": "Progress Bar Component",
-            "description": "Reusable progress indicator with percentage display, animated fill, and state-based styling (pending/processing/complete/error).",
-            "files": [
-                "src/components/ui/ProgressBar.tsx"
-            ]
-        },
-        {
-            "name": "Bundle Optimization",
-            "description": "Next.js dynamic imports configuration for lazy-loading heavy components (StemPlayer, FileUpload, WaveformVisualizer) to reduce initial page load.",
-            "files": [
-                "src/app/page.tsx",
-                "src/app/results/page.tsx",
-                "src/components/ui/StemPlayer.tsx",
-                "next.config.ts"
             ]
         }
     ]

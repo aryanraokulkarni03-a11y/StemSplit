@@ -1,0 +1,107 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link "Singscape" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img [ref=e7]
+          - generic [ref=e10]: Singscape
+        - generic [ref=e11]:
+          - link "Features" [ref=e12] [cursor=pointer]:
+            - /url: "#features"
+          - link "How It Works" [ref=e13] [cursor=pointer]:
+            - /url: "#how-it-works"
+          - link "GitHub" [ref=e14] [cursor=pointer]:
+            - /url: https://github.com/aryanraokulkarni03-a11y/Singscape
+            - img [ref=e15]
+            - text: GitHub
+          - link "Start Splitting" [ref=e18] [cursor=pointer]:
+            - /url: "#upload"
+  - main [ref=e19]:
+    - generic [ref=e20]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - img [ref=e24]
+          - generic [ref=e26]: AI-Powered • Free to Use • No Sign-up
+        - heading "Split Any Song Into Stems" [level=1] [ref=e27]:
+          - text: Split Any Song
+          - text: Into Stems
+        - paragraph [ref=e28]: Extract vocals, drums, bass, and instruments from any audio file using state-of-the-art AI. Perfect for music practice, remixing, and learning.
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - img [ref=e32]
+            - generic [ref=e36]: Vocals
+          - generic [ref=e37]:
+            - img [ref=e39]
+            - generic [ref=e44]: Drums
+          - generic [ref=e45]:
+            - img [ref=e47]
+            - generic [ref=e52]: Bass
+          - generic [ref=e53]:
+            - img [ref=e55]
+            - generic [ref=e59]: Other
+      - generic [ref=e62]:
+        - heading "Upload Your Audio" [level=2] [ref=e63]
+        - generic [ref=e64]:
+          - generic [ref=e67] [cursor=pointer]:
+            - button "Upload Track Drag & drop or click to browse MP3 / WAV • Max 25MB" [ref=e68]
+            - generic [ref=e69]:
+              - img [ref=e71]
+              - generic [ref=e74]:
+                - heading "Upload Track" [level=3] [ref=e75]
+                - paragraph [ref=e76]:
+                  - text: Drag & drop or click to browse
+                  - generic [ref=e77]: MP3 / WAV • Max 25MB
+          - generic [ref=e78]:
+            - img [ref=e79]
+            - paragraph [ref=e81]: Could not read audio file. Please try another file.
+      - generic [ref=e83]:
+        - heading "Why Choose StemSplit?" [level=2] [ref=e84]
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - img [ref=e88]
+            - heading "AI-Powered Quality" [level=3] [ref=e90]
+            - paragraph [ref=e91]: Built on state-of-the-art Demucs model for professional-grade stem separation.
+          - generic [ref=e92]:
+            - img [ref=e94]
+            - heading "100% Private" [level=3] [ref=e96]
+            - paragraph [ref=e97]: All processing happens in your browser. Your audio files never leave your device.
+          - generic [ref=e98]:
+            - img [ref=e100]
+            - heading "Free Forever" [level=3] [ref=e103]
+            - paragraph [ref=e104]: No sign-up, no subscription, no limits. Use as much as you want, completely free.
+      - generic [ref=e106]:
+        - heading "How It Works" [level=2] [ref=e107]
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e110]: "1"
+            - heading "Upload" [level=3] [ref=e111]
+            - paragraph [ref=e112]: Drag and drop your MP3 or WAV file, or click to browse.
+          - generic [ref=e113]:
+            - generic [ref=e114]: "2"
+            - heading "Process" [level=3] [ref=e115]
+            - paragraph [ref=e116]: Our AI analyzes your audio and separates it into individual stems.
+          - generic [ref=e117]:
+            - generic [ref=e118]: "3"
+            - heading "Download" [level=3] [ref=e119]
+            - paragraph [ref=e120]: Preview each stem and download them individually or as a bundle.
+      - generic [ref=e123]:
+        - img [ref=e124]
+        - heading "Ready to Split Your First Track?" [level=2] [ref=e127]
+        - paragraph [ref=e128]: Join thousands of musicians, educators, and creators who use StemSplit for practice, learning, and remixing.
+        - button "Get Started Free" [ref=e129]:
+          - img [ref=e130]
+          - text: Get Started Free
+  - contentinfo [ref=e132]:
+    - generic [ref=e134]:
+      - generic [ref=e135]:
+        - img [ref=e137]
+        - generic [ref=e140]: © 2026 Singscape
+      - generic [ref=e142]: AI Audio Separation v1.0
+  - button "Open Next.js Dev Tools" [ref=e148] [cursor=pointer]:
+    - img [ref=e149]
+  - alert [ref=e152]
+```

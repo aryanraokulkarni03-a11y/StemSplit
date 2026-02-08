@@ -7,10 +7,9 @@
     "projectName": "frontend",
     "projectPath": "c:\\Users\\HP\\Documents\\AI\\Singscape\\frontend",
     "testIds": [],
-    "additionalInstruction": "",
+    "additionalInstruction": "Server is at http://127.0.0.1:3000. Use this explicit IP.",
     "envs": {
       "API_KEY": "sk-user-1G3SOi3bM8N7tDEtvMJgPgjEVmZhV8W0N6gFpKfiY4cBJeuLT0OnE8zOyPIjL78AGQ3Z0auNESX-LuiI3b_UhptRaNqkQ4cxEyZlqyk8R4ZWXnOvGIhJdsBV0EjKR1fQBUU"
     }
-  },
-  "serverPort": 54979
+  }
 }

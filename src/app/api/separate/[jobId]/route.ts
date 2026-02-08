@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface StemStatus {
-    name: 'vocals' | 'drums' | 'bass' | 'other';
-    status: 'pending' | 'processing' | 'complete' | 'error';
-    progress: number;
-}
+import path from 'path';
+import fs from 'fs';
 
 // GET /api/separate/[jobId] - Check status of separation job
 export async function GET(
@@ -12,25 +8,29 @@ export async function GET(
     { params }: { params: Promise<{ jobId: string }> }
 ) {
     const { jobId } = await params;
+    const outputDir = path.join(process.cwd(), 'public', 'separated', jobId);
+    const statusFile = path.join(outputDir, 'status.json');
 
-    // TODO: In production, query database or cache for actual job status
-    // For now, return mock data for MVP
-    // In a real implementation:
-    // - Store job status in Redis/Database
-    // - Update status from Python process via IPC/polling
-    // - Return actual progress values
+    try {
+        if (!fs.existsSync(statusFile)) {
+            // Job might be just starting or doesn't exist
+            // Check if directory exists at least
+            if (fs.existsSync(outputDir)) {
+                return NextResponse.json({ status: 'starting', progress: 0, message: 'Initializing job...' });
+            }
+            return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+        }
 
-    return NextResponse.json({
-        jobId,
-        status: 'processing' as const,
-        progress: 45,
-        message: 'Separating vocals...',
-        estimatedTimeRemaining: 60,
-        stems: [
-            { name: 'vocals', status: 'processing', progress: 60 },
-            { name: 'drums', status: 'pending', progress: 0 },
-            { name: 'bass', status: 'pending', progress: 0 },
-            { name: 'other', status: 'pending', progress: 0 },
-        ] as StemStatus[]
-    });
+        const statusContent = fs.readFileSync(statusFile, 'utf-8');
+        const status = JSON.parse(statusContent);
+
+        return NextResponse.json({
+            jobId,
+            ...status
+        });
+
+    } catch (error) {
+        console.error('Status check error:', error);
+        return NextResponse.json({ error: 'Failed to check status' }, { status: 500 });
+    }
 }
