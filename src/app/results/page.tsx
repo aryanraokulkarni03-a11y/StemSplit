@@ -2,11 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Music2, ArrowLeft, Upload, CheckCircle2, Sparkles } from 'lucide-react';
-import { StemGrid } from '@/components/ui/StemPlayer';
 import { StemResult } from '@/types/audio';
 import { Button } from '@/components/ui/ProgressBar';
+
+const StemGrid = dynamic(
+    () => import('@/components/ui/StemPlayer').then((mod) => mod.StemGrid),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="w-full h-96 bg-zinc-900/50 animate-pulse border border-zinc-800 flex items-center justify-center">
+                <span className="text-zinc-500 font-mono">LOADING STEMS...</span>
+            </div>
+        ),
+    }
+);
 
 interface StoredStemResult {
     name: 'vocals' | 'drums' | 'bass' | 'other';
@@ -85,22 +97,26 @@ export default function ResultsPage() {
         <div className="min-h-screen py-20 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* Success Header */}
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-6">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                <div className="text-center mb-16">
+                    <div className="inline-block relative">
+                        <div className="absolute inset-0 bg-emerald-500/20 blur-3xl animate-pulse-slow rounded-full" />
+                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center relative z-10 shadow-2xl animate-float">
+                            <CheckCircle2 className="w-12 h-12 text-white" />
+                        </div>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-                        <span className="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">
-                            Separation Complete!
-                        </span>
+
+                    <h1 className="text-4xl sm:text-6xl font-bold mt-8 mb-4 font-outfit tracking-tight text-white">
+                        Separation Complete
                     </h1>
-                    {originalFileName && (
-                        <p className="text-foreground/60 mb-2">
-                            <span className="font-medium text-foreground">{originalFileName}</span>
-                        </p>
-                    )}
-                    <p className="text-foreground/60">
-                        Your audio has been separated into {stems.length} individual stems
+
+                    <p className="text-lg text-zinc-400 max-w-lg mx-auto font-light">
+                        {originalFileName ? (
+                            <>
+                                Results for <span className="text-white font-medium">{originalFileName}</span>
+                            </>
+                        ) : (
+                            'Your audio has been separated into individual stems'
+                        )}
                     </p>
                 </div>
 
@@ -149,6 +165,7 @@ export default function ResultsPage() {
                         size="lg"
                         onClick={handleProcessAnother}
                         icon={<Upload className="w-5 h-5" />}
+                        data-testid="process-another-btn"
                     >
                         Process Another File
                     </Button>

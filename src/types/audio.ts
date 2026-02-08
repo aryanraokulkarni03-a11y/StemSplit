@@ -19,12 +19,12 @@ export interface StemResult {
   volume: number;
 }
 
-export type ProcessingStage = 
-  | 'idle' 
-  | 'loading-model' 
-  | 'processing' 
-  | 'exporting' 
-  | 'complete' 
+export type ProcessingStage =
+  | 'idle'
+  | 'loading-model'
+  | 'processing'
+  | 'exporting'
+  | 'complete'
   | 'error';
 
 export interface ProcessingStatus {
@@ -43,10 +43,10 @@ export interface ModelInfo {
 
 // Stem configuration
 export const STEM_CONFIG: Record<string, { label: string; color: string }> = {
-  vocals: { label: 'Vocals', color: '#0ea5e9' },      // Sky blue
-  drums: { label: 'Drums', color: '#f59e0b' },        // Amber
-  bass: { label: 'Bass', color: '#10b981' },          // Emerald
-  other: { label: 'Other', color: '#ec4899' },        // Pink (not purple!)
+  vocals: { label: 'Vocals', color: '#e50914' },      // Brand Red
+  drums: { label: 'Drums', color: '#ffff00' },        // Hyper Yellow
+  bass: { label: 'Bass', color: '#00ff00' },          // Neon Green
+  other: { label: 'Other', color: '#00ffff' },        // Cyan (CMYK style)
 };
 
 // File constraints for MVP

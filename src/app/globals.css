@@ -1,86 +1,181 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* 🔴 Singscape Brutalist Theme */
+  --background: #000000;
+  /* Pure Black */
+  --foreground: #ffffff;
+  /* Pure White */
+
+  --primary: #e50914;
+  /* Spotify Red / International Orange */
+  --secondary: #ff5500;
+  /* SoundCloud Orange */
+  --accent: #ffff00;
+  /* Cyber Yellow */
+  --destruct: #ff0000;
+
+  /* Brutalist Surface Tokens */
+  --surface-border: #333333;
+  --surface-bg: #111111;
+  --surface-hover: #222222;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Gradient backgrounds */
-.gradient-bg {
-  background: radial-gradient(ellipse at top, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+/* 🟥 Brutalist Utility Classes */
+.brutalist-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  box-shadow: 4px 4px 0px var(--primary);
+  /* Hard Shadow */
+  transition: all 0.2s ease;
+  border-radius: 0px;
+  /* Sharp Edges */
 }
 
-/* Glow effects */
-.glow-sky {
-  box-shadow: 0 0 60px rgba(14, 165, 233, 0.3);
+.brutalist-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--secondary);
+  border-color: var(--foreground);
 }
 
-.glow-emerald {
-  box-shadow: 0 0 60px rgba(16, 185, 129, 0.3);
+.brutalist-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
 }
 
-/* Glass effect */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.brutalist-button:hover {
+  background: var(--secondary);
+  box-shadow: 4px 4px 0px white;
+  transform: translate(-2px, -2px);
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* 🌌 Atmosphere (Subtle Grain) */
+.grain-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
-/* Hide scrollbar but keep functionality */
+/* ✨ Neon Typography */
+.glow-text {
+  text-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #e50914 0%, #ff5500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 🌈 Stem Colors (Fire Tones) */
+.stem-vocals {
+  color: #ff5500;
+  /* Orange */
+  text-shadow: 0 0 10px rgba(255, 85, 0, 0.4);
+}
+
+.stem-drums {
+  color: #e50914;
+  /* Red */
+  text-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
+}
+
+.stem-bass {
+  color: #ffff00;
+  /* Yellow */
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.4);
+}
+
+.stem-other {
+  color: #ffffff;
+  /* White */
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.bg-stem-vocals {
+  background-color: #ff5500;
+}
+
+.bg-stem-drums {
+  background-color: #e50914;
+}
+
+.bg-stem-bass {
+  background-color: #d4d400;
+}
+
+.bg-stem-other {
+  background-color: #888888;
+}
+
+/* 🎭 Animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-fast {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-spin-vinyl {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 0.5s ease-in-out infinite;
+}
+
+/* Scrollbar Polish */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #000;
+  border-left: 1px solid #333;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: #e50914;
+  border: 1px solid #000;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #ff5500;
 }
-
-/* Animation for floating elements */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Stem color utilities */
-.stem-vocals { color: #0ea5e9; }
-.stem-drums { color: #f59e0b; }
-.stem-bass { color: #10b981; }
-.stem-other { color: #ec4899; }
-
-.bg-stem-vocals { background-color: #0ea5e9; }
-.bg-stem-drums { background-color: #f59e0b; }
-.bg-stem-bass { background-color: #10b981; }
-.bg-stem-other { background-color: #ec4899; }

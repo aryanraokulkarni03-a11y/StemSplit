@@ -134,31 +134,47 @@ export function createSilentBuffer(
 }
 
 /**
- * Simulate stem separation (placeholder for MVP)
+ * Simulate stem separation (placeholder for MVP) - Centralized Logic
  * In production, this would call the ONNX model
  */
 export async function simulateStemSeparation(
     audioBuffer: AudioBuffer,
-    onProgress: (progress: number, message: string) => void
+    onProgress: (progress: number, message: string, remainingTime?: number) => void
 ): Promise<Map<string, AudioBuffer>> {
     const stems = new Map<string, AudioBuffer>();
     const stemNames = ['vocals', 'drums', 'bass', 'other'];
+    const totalStems = stemNames.length;
 
-    for (let i = 0; i < stemNames.length; i++) {
+    // Base time per stem (simulated)
+    const TIME_PER_STEM = 1500;
+
+    for (let i = 0; i < totalStems; i++) {
         const stemName = stemNames[i];
-        const progress = ((i + 1) / stemNames.length) * 100;
 
-        onProgress(progress - 20, `Extracting ${stemName}...`);
+        // Calculate progress based on stem count (15% to 95%)
+        const progressStart = 15 + (i * (80 / totalStems));
+        const progressEnd = 15 + ((i + 1) * (80 / totalStems));
 
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Start of stem processing
+        onProgress(
+            progressStart,
+            `Extracting ${stemName}...`,
+            ((totalStems - i) * TIME_PER_STEM) / 1000
+        );
 
-        // For demo: create filtered version of original audio
-        // In production, this would be the actual separated stem
+        // Simulate processing work
+        await new Promise(resolve => setTimeout(resolve, TIME_PER_STEM));
+
+        // For MVP demo: create filtered version of original audio
         const stemBuffer = createFilteredBuffer(audioBuffer, stemName);
         stems.set(stemName, stemBuffer);
 
-        onProgress(progress, `${stemName} extracted`);
+        // End of stem processing
+        onProgress(
+            progressEnd,
+            `${stemName} extracted`,
+            ((totalStems - i - 1) * TIME_PER_STEM) / 1000
+        );
     }
 
     return stems;
@@ -193,7 +209,9 @@ function createFilteredBuffer(
         }[stemType] || 0.5;
 
         for (let i = 0; i < inputData.length; i++) {
-            outputData[i] = inputData[i] * scale;
+            // Add slight optimization: use local var for loop speed
+            const val = inputData[i];
+            outputData[i] = val * scale;
         }
     }
 

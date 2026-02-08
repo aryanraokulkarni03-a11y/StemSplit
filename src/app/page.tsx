@@ -1,10 +1,22 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { ArrowRight, Music2, Mic2, Drum, Guitar, Waves, Zap, Shield, Download } from 'lucide-react';
-import { FileUpload } from '@/components/ui/FileUpload';
 import { Button } from '@/components/ui/ProgressBar';
 import { AudioFile, STEM_CONFIG } from '@/types/audio';
+
+const FileUpload = dynamic(
+  () => import('@/components/ui/FileUpload').then((mod) => mod.FileUpload),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full max-w-2xl mx-auto h-96 bg-zinc-900/50 animate-pulse border border-zinc-800 flex items-center justify-center">
+        <span className="text-zinc-500 font-mono">LOADING UPLOADER...</span>
+      </div>
+    ),
+  }
+);
 
 export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState<AudioFile | null>(null);
@@ -88,6 +100,7 @@ export default function HomePage() {
                   size="lg"
                   onClick={handleStartProcessing}
                   icon={<ArrowRight className="w-5 h-5" />}
+                  data-testid="start-processing-btn"
                 >
                   Start Processing
                 </Button>

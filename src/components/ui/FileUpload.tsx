@@ -20,12 +20,12 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
             FILE_CONSTRAINTS.acceptedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
 
         if (!isValidType) {
-            return 'Please upload an MP3 or WAV file';
+            return 'Only MP3 or WAV files supported';
         }
 
         // Check file size
         if (file.size > FILE_CONSTRAINTS.maxSize) {
-            return `File too large. Maximum size is ${FILE_CONSTRAINTS.maxSize / (1024 * 1024)}MB`;
+            return `Max file size is ${FILE_CONSTRAINTS.maxSize / (1024 * 1024)}MB`;
         }
 
         return null;
@@ -67,7 +67,7 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
                 size: file.size,
                 duration,
                 file,
-                url: URL.createObjectURL(file),
+                url: URL.createObjectURL(file), // Still valid in browser
             };
 
             setSelectedFile(audioFile);
@@ -126,83 +126,109 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto">
-            {/* Drop Zone */}
+        <div className="w-full max-w-2xl mx-auto font-outfit">
+            {/* Drop Zone (Brutalist Card) */}
             <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 className={`
-          relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300
-          ${isDragging ? 'border-sky-500 bg-sky-500/10 scale-[1.02]' : 'border-white/20 hover:border-white/40'}
+          relative group transition-all duration-200 brutalist-card p-12
+          ${isDragging ? 'border-primary bg-zinc-900 translate-x-[2px] translate-y-[2px] shadow-none' : ''}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-          ${selectedFile ? 'border-emerald-500 bg-emerald-500/5' : ''}
         `}
             >
-                {selectedFile ? (
-                    /* Selected File Preview */
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                                <FileAudio className="w-7 h-7 text-white" />
+                {/* Content Container */}
+                <div className="relative flex flex-col items-center justify-center text-center">
+
+                    {selectedFile ? (
+                        /* Selected File Preview - Solid Card */
+                        <div className="w-full">
+                            <div className="bg-zinc-900 border border-zinc-800 p-6 flex items-center justify-between gap-6">
+                                <div className="flex items-center gap-6 min-w-0">
+                                    <div className="w-16 h-16 bg-primary flex items-center justify-center flex-shrink-0 animate-spin-vinyl">
+                                        <div className="w-6 h-6 bg-black rounded-full border-2 border-zinc-800"></div>
+                                    </div>
+                                    <div className="text-left min-w-0">
+                                        <p className="font-bold text-lg text-white truncate max-w-[200px] sm:max-w-[300px] uppercase tracking-wide">
+                                            {selectedFile?.name || 'Unknown File'}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-xs text-primary font-mono uppercase border border-primary px-1">
+                                                {selectedFile?.size ? formatFileSize(selectedFile.size) : '0 B'}
+                                            </span>
+                                            <span className="text-zinc-600">/</span>
+                                            <span className="text-sm text-zinc-400 font-mono">
+                                                {selectedFile?.duration ? formatDuration(selectedFile.duration) : '0:00'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        clearFile();
+                                    }}
+                                    className="p-3 bg-zinc-800 hover:bg-destruct text-white transition-colors"
+                                    disabled={disabled}
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
-                            <div className="text-left">
-                                <p className="font-medium text-foreground truncate max-w-[200px] sm:max-w-[300px]">
-                                    {selectedFile.name}
-                                </p>
-                                <p className="text-sm text-foreground/60">
-                                    {formatFileSize(selectedFile.size)} • {formatDuration(selectedFile.duration)}
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                clearFile();
-                            }}
-                            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                            disabled={disabled}
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                ) : (
-                    /* Upload Prompt */
-                    <label className={`block ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                        <input
-                            type="file"
-                            accept=".mp3,.wav,audio/mpeg,audio/wav"
-                            onChange={handleInputChange}
-                            disabled={disabled}
-                            className="sr-only"
-                        />
-                        <div className="flex flex-col items-center gap-4">
-                            <div className={`
-                w-16 h-16 rounded-full flex items-center justify-center transition-all
-                ${isDragging ? 'bg-sky-500 scale-110' : 'bg-white/10'}
-              `}>
-                                <Upload className={`w-8 h-8 ${isDragging ? 'text-white' : 'text-foreground/60'}`} />
-                            </div>
-                            <div>
-                                <p className="text-lg font-medium">
-                                    {isDragging ? 'Drop your audio file here' : 'Drag & drop your audio file'}
-                                </p>
-                                <p className="text-sm text-foreground/60 mt-1">
-                                    or click to browse • MP3 or WAV • Max 10MB
+
+                            <div className="mt-6 flex justify-center">
+                                <p className="text-primary text-sm font-bold uppercase tracking-wider flex items-center gap-2 animate-pulse-fast">
+                                    <div className="w-2 h-2 bg-primary"></div>
+                                    File Locked & Loaded
                                 </p>
                             </div>
                         </div>
-                    </label>
-                )}
+                    ) : (
+                        /* Upload Prompt */
+                        <label className={`block w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                            <input
+                                type="file"
+                                accept=".mp3,.wav,audio/mpeg,audio/wav"
+                                onChange={handleInputChange}
+                                disabled={disabled}
+                                className="sr-only"
+                                data-testid="file-upload-input"
+                            />
+                            <div className="flex flex-col items-center gap-6" data-testid="upload-drop-zone">
+                                {/* Simple Icon */}
+                                <div className={`
+                                    w-20 h-20 border-2 border-dashed border-zinc-700 flex items-center justify-center transition-all duration-300
+                                    ${isDragging ? 'border-primary bg-primary/10' : 'group-hover:border-white group-hover:bg-zinc-900'}
+                                `}>
+                                    <Upload
+                                        className={`w-8 h-8 transition-colors duration-300 ${isDragging ? 'text-primary' : 'text-zinc-500 group-hover:text-white'}`}
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-3xl font-black font-outfit text-white uppercase tracking-tighter group-hover:text-primary transition-colors">
+                                        {isDragging ? 'Drop It' : 'Upload Track'}
+                                    </h3>
+                                    <p className="text-zinc-500 font-mono text-sm uppercase tracking-wide">
+                                        Drag & drop or click to browse
+                                        <br />
+                                        <span className="text-zinc-600 mt-1 block">MP3 / WAV • Max 25MB</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </label>
+                    )}
+                </div>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                    <p className="text-sm text-red-400">{error}</p>
+                <div className="mt-6 p-4 bg-destruct text-white flex items-center gap-3 border border-white shadow-[4px_4px_0px_white]">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <p className="text-sm font-bold uppercase tracking-wide">{error}</p>
                 </div>
             )}
         </div>
     );
 }
+

@@ -7,11 +7,11 @@
     "projectName": "stemsplit-app",
     "projectPath": "c:\\Users\\HP\\Documents\\AI\\Singscape\\stemsplit-app",
     "testIds": [],
-    "additionalInstruction": "",
+    "additionalInstruction": "Focus on testing component rendering and basic interactions. Check if FileUpload, ProcessPage, StemPlayer, and ResultsPage components render correctly without errors.",
     "envs": {
       "API_KEY": "sk-user-1G3SOi3bM8N7tDEtvMJgPgjEVmZhV8W0N6gFpKfiY4cBJeuLT0OnE8zOyPIjL78AGQ3Z0auNESX-LuiI3b_UhptRaNqkQ4cxEyZlqyk8R4ZWXnOvGIhJdsBV0EjKR1fQBUU"
     }
   },
-  "serverPort": 62806,
-  "proxy": "http://c6c108c1-1aaf-4784-b7d8-f447c222dee9:HkwL2C3KjjdMwfIUdU07pm3mUprw5tdV@tun.testsprite.com:8080"
+  "serverPort": 52113,
+  "proxy": "http://fcfd197a-2a9e-41e8-b6a6-03396cecfedf:npEW1KIF2AXZ0AnDadYJJ03mKnLNau3n@tun.testsprite.com:8080"
 }
