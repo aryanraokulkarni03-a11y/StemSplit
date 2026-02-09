@@ -10,13 +10,14 @@ interface ProgressBarProps {
     onCancel?: () => void;
 }
 
-export function ProgressBar({ status, onCancel }: ProgressBarProps) {
+export const ProgressBar = React.memo(function ProgressBar({ status, onCancel }: ProgressBarProps) {
     const { stage, progress, message, estimatedTimeRemaining } = status;
 
     const formatTime = (seconds: number): string => {
-        if (seconds < 60) return `${Math.round(seconds)}s`;
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.round(seconds % 60);
+        const rounded = Math.round(seconds);
+        if (rounded < 60) return `${rounded}s`;
+        const mins = Math.floor(rounded / 60);
+        const secs = rounded % 60;
         return `${mins}m ${secs}s`;
     };
 
@@ -82,7 +83,9 @@ export function ProgressBar({ status, onCancel }: ProgressBarProps) {
 
             {/* Progress Percentage */}
             <div className="flex items-center justify-between mt-2">
-                <p className="text-sm text-foreground/60">{Math.round(progress)}% complete</p>
+                <p className="text-sm text-foreground/60 tabular-nums" aria-live="polite">
+                    {Math.round(progress)}% complete
+                </p>
                 {stage === 'processing' && (
                     <div className="flex items-center gap-2 text-sm text-foreground/60">
                         <Music className="w-4 h-4" />
@@ -92,7 +95,7 @@ export function ProgressBar({ status, onCancel }: ProgressBarProps) {
             </div>
         </div>
     );
-}
+});
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'ghost';
@@ -101,7 +104,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon?: React.ReactNode;
 }
 
-export function Button({
+export const Button = React.memo(function Button({
     children,
     variant = 'primary',
     size = 'md',
@@ -111,12 +114,13 @@ export function Button({
     disabled,
     ...props
 }: ButtonProps) {
-    const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variants = {
-        primary: 'bg-gradient-to-r from-sky-500 to-emerald-500 text-white hover:opacity-90 active:scale-[0.98]',
-        secondary: 'bg-white/10 text-foreground hover:bg-white/20 active:scale-[0.98]',
-        ghost: 'text-foreground/70 hover:text-foreground hover:bg-white/10',
+        primary: 'bg-gradient-to-r from-sky-500 to-emerald-500 text-white hover:opacity-90 active:scale-[0.98] rounded-full',
+        secondary: 'bg-white/10 text-foreground hover:bg-white/20 active:scale-[0.98] rounded-full',
+        ghost: 'text-foreground/70 hover:text-foreground hover:bg-white/10 rounded-full',
+        tactile: 'btn-tactile rounded-sm',
     };
 
     const sizes = {
@@ -139,4 +143,4 @@ export function Button({
             {children}
         </button>
     );
-}
+});

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FILE_CONSTRAINTS } from '@/types/audio';
+import path from 'path';
+import fs from 'fs';
 
 export const runtime = 'nodejs'; // Use Node.js runtime for compatibility with fileops
 
@@ -15,6 +17,12 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+
+        // Normalize filename: remove spaces and special characters but keep extension
+        const rawName = file.name;
+        const ext = path.extname(rawName);
+        const nameWithoutExt = path.basename(rawName, ext).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const safeName = `${nameWithoutExt}${ext}`;
 
         // Validate file type
         const isValidType = FILE_CONSTRAINTS.acceptedTypes.includes(file.type) ||
@@ -46,16 +54,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // For MVP: return validation success
-        // In production: would upload to storage (S3, Cloudflare R2, etc.)
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Save file to disk
+        const filePath = path.join(uploadsDir, safeName);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        fs.writeFileSync(filePath, buffer);
+
+        console.log(`[API] File saved successfully: ${filePath}`);
+
         return NextResponse.json({
             success: true,
             file: {
-                name: file.name,
+                name: safeName,
                 size: file.size,
                 type: file.type,
+                path: filePath
             },
-            message: 'File validated successfully. Ready for processing.',
+            message: 'File uploaded and saved successfully.',
             processingEndpoint: '/api/separate',
         });
 

@@ -1,29 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
 
-// GET /api/separate/[jobId] - Check status of separation job
+// Check if Clerk is configured
+const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+// GET /api/separate/[jobId] - Proxy status check to FastAPI
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ jobId: string }> }
 ) {
     const { jobId } = await params;
-    const outputDir = path.join(process.cwd(), 'public', 'separated', jobId);
-    const statusFile = path.join(outputDir, 'status.json');
+    let token: string | null = null;
+
+    // Only attempt auth if Clerk is configured
+    if (isClerkConfigured) {
+        const { auth } = await import('@clerk/nextjs/server');
+        const { getToken } = await auth();
+        token = await getToken();
+    } else {
+        // Dev mode - use a placeholder token
+        token = 'dev_token_no_auth';
+    }
 
     try {
-        if (!fs.existsSync(statusFile)) {
-            // Job might be just starting or doesn't exist
-            // Check if directory exists at least
-            if (fs.existsSync(outputDir)) {
-                return NextResponse.json({ status: 'starting', progress: 0, message: 'Initializing job...' });
+        // Fetch status from the Python microservice
+        const fastapiResponse = await fetch(`http://localhost:8000/status/${jobId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-            return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+        });
+
+        if (!fastapiResponse.ok) {
+            if (fastapiResponse.status === 404) {
+                return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+            }
+            throw new Error('FastAPI status check failed');
         }
 
-        const statusContent = fs.readFileSync(statusFile, 'utf-8');
-        const status = JSON.parse(statusContent);
+        const status = await fastapiResponse.json();
 
+        // Return the jobId merged with the status from the backend
         return NextResponse.json({
             jobId,
             ...status

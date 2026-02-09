@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowRight, Music2, Mic2, Drum, Guitar, Waves, Zap, Shield, Download } from 'lucide-react';
+import { ArrowRight, Music2, Zap, Shield, Download } from 'lucide-react';
 import { Button } from '@/components/ui/ProgressBar';
-import { AudioFile, STEM_CONFIG } from '@/types/audio';
+import { AudioFile } from '@/types/audio';
 
 const FileUpload = dynamic(
   () => import('@/components/ui/FileUpload').then((mod) => mod.FileUpload),
@@ -18,71 +19,59 @@ const FileUpload = dynamic(
   }
 );
 
+import { SkeuomorphicHero } from '@/components/ui/SkeuomorphicHero';
+
 export default function HomePage() {
+  const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<AudioFile | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = useCallback((file: AudioFile) => {
     setSelectedFile(file);
   }, []);
 
-  const handleStartProcessing = useCallback(() => {
-    if (selectedFile) {
-      // Store file info in sessionStorage for processing page
-      sessionStorage.setItem('audioFile', JSON.stringify({
-        name: selectedFile.name,
-        size: selectedFile.size,
-        duration: selectedFile.duration,
-      }));
-      // Navigate to processing page
-      window.location.href = '/process';
+  const handleStartProcessing = useCallback(async () => {
+    if (selectedFile && selectedFile.file) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile.file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to upload file to server');
+        }
+
+        const data = await response.json();
+
+        // Store file info in sessionStorage for processing page
+        sessionStorage.setItem('audioFile', JSON.stringify({
+          name: data.file.name,
+          size: data.file.size,
+          duration: selectedFile.duration,
+        }));
+
+        // Navigate to processing page
+        router.push('/process');
+      } catch (err) {
+        console.error('Upload failed:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to upload file. Please try again.';
+        alert(errorMessage);
+      } finally {
+        setIsUploading(false);
+      }
     }
-  }, [selectedFile]);
+  }, [selectedFile, router]);
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-20 sm:py-32 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span className="text-sm text-foreground/70">AI-Powered • Free to Use • No Sign-up</span>
-          </div>
-
-          {/* Heading */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-sky-400 bg-clip-text text-transparent">
-              Split Any Song
-            </span>
-            <br />
-            <span className="text-foreground">Into Stems</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-foreground/60 max-w-2xl mx-auto mb-12">
-            Extract vocals, drums, bass, and instruments from any audio file using
-            state-of-the-art AI. Perfect for music practice, remixing, and learning.
-          </p>
-
-          {/* Stem Icons */}
-          <div className="flex items-center justify-center gap-4 sm:gap-8 mb-12">
-            {Object.entries(STEM_CONFIG).map(([key, config]) => (
-              <div key={key} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-transform hover:scale-110"
-                  style={{ backgroundColor: `${config.color}20` }}
-                >
-                  {key === 'vocals' && <Mic2 className="w-7 h-7" style={{ color: config.color }} />}
-                  {key === 'drums' && <Drum className="w-7 h-7" style={{ color: config.color }} />}
-                  {key === 'bass' && <Guitar className="w-7 h-7" style={{ color: config.color }} />}
-                  {key === 'other' && <Waves className="w-7 h-7" style={{ color: config.color }} />}
-                </div>
-                <span className="text-xs sm:text-sm text-foreground/60">{config.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Hero Section - Skeuomorphic */}
+      <SkeuomorphicHero />
 
       {/* Upload Section */}
       <section id="upload" className="py-12 px-4">
@@ -99,10 +88,12 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   onClick={handleStartProcessing}
+                  loading={isUploading}
+                  disabled={isUploading}
                   icon={<ArrowRight className="w-5 h-5" />}
                   data-testid="start-processing-btn"
                 >
-                  Start Processing
+                  {isUploading ? 'Preparing Engine...' : 'Start Processing'}
                 </Button>
                 <p className="text-sm text-foreground/50 mt-4">
                   Processing happens in your browser • Your files never leave your device

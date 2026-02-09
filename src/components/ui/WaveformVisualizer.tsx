@@ -36,9 +36,14 @@ export function WaveformVisualizer({
                 const audioContext = new AudioContext();
                 const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-                if (cancelled) return;
+                if (cancelled) {
+                    await audioContext.close();
+                    return;
+                }
 
                 setDuration(audioBuffer.duration);
+                // Close context after decoding to free up resources
+                await audioContext.close();
 
                 // Get channel data and downsample for visualization
                 const channelData = audioBuffer.getChannelData(0);

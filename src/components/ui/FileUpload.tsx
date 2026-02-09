@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Upload, FileAudio, X, AlertCircle } from 'lucide-react';
+import { Upload, X, AlertCircle } from 'lucide-react';
 import { AudioFile, FILE_CONSTRAINTS } from '@/types/audio';
 
 interface FileUploadProps {
@@ -9,7 +9,7 @@ interface FileUploadProps {
     disabled?: boolean;
 }
 
-export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) {
+export const FileUpload = React.memo(function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<AudioFile | null>(null);
@@ -32,21 +32,31 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
     }, []);
 
     const getAudioDuration = (file: File): Promise<number> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const audio = new Audio();
+            const objectUrl = URL.createObjectURL(file);
+
             audio.preload = 'metadata';
 
+            const cleanup = () => {
+                URL.revokeObjectURL(objectUrl);
+                audio.onloadedmetadata = null;
+                audio.onerror = null;
+            };
+
             audio.onloadedmetadata = () => {
-                URL.revokeObjectURL(audio.src);
-                resolve(audio.duration);
+                const duration = audio.duration;
+                cleanup();
+                resolve(isNaN(duration) || duration === Infinity ? 0 : duration);
             };
 
             audio.onerror = () => {
-                URL.revokeObjectURL(audio.src);
-                reject(new Error('Could not load audio file'));
+                cleanup();
+                console.warn('Could not read audio metadata, using 0 as fallback duration');
+                resolve(0); // Fallback instead of rejecting
             };
 
-            audio.src = URL.createObjectURL(file);
+            audio.src = objectUrl;
         });
     };
 
@@ -109,126 +119,149 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
     }, [handleFile]);
 
     const clearFile = useCallback(() => {
+        if (selectedFile?.url) {
+            URL.revokeObjectURL(selectedFile.url);
+        }
         setSelectedFile(null);
         setError(null);
-    }, []);
+    }, [selectedFile]);
 
-    const formatFileSize = (bytes: number): string => {
-        if (bytes < 1024) return `${bytes} B`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    };
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => {
+            if (selectedFile?.url) {
+                URL.revokeObjectURL(selectedFile.url);
+            }
+        };
+    }, []); // Only on unmount. If selectedFile changes, clearFile already handles revocation.
 
-    const formatDuration = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+    // formatFileSize and formatDuration removed as they were unused
 
     return (
-        <div className="w-full max-w-2xl mx-auto font-outfit">
-            {/* Drop Zone (Brutalist Card) */}
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={`
-          relative group transition-all duration-200 brutalist-card p-12
-          ${isDragging ? 'border-primary bg-zinc-900 translate-x-[2px] translate-y-[2px] shadow-none' : ''}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        `}
-            >
-                {/* Content Container */}
-                <div className="relative flex flex-col items-center justify-center text-center">
+        <div className="w-full max-w-2xl mx-auto font-outfit perspective-1000">
+            {/* Tape Deck Chassis */}
+            <div className="relative bg-metal-dark p-8 rounded-sm shadow-2xl border-t border-white/10 border-b border-black/50">
 
-                    {selectedFile ? (
-                        /* Selected File Preview - Solid Card */
-                        <div className="w-full">
-                            <div className="bg-zinc-900 border border-zinc-800 p-6 flex items-center justify-between gap-6">
-                                <div className="flex items-center gap-6 min-w-0">
-                                    <div className="w-16 h-16 bg-primary flex items-center justify-center flex-shrink-0 animate-spin-vinyl">
-                                        <div className="w-6 h-6 bg-black rounded-full border-2 border-zinc-800"></div>
-                                    </div>
-                                    <div className="text-left min-w-0">
-                                        <p className="font-bold text-lg text-white truncate max-w-[200px] sm:max-w-[300px] uppercase tracking-wide">
-                                            {selectedFile?.name || 'Unknown File'}
+                {/* Screw Heads */}
+                <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+
+                {/* Drop Zone / Tape Slot */}
+                <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    className={`
+                        relative transition-all duration-300 slot-inset rounded-lg p-2 overflow-hidden
+                        ${isDragging ? 'shadow-[0_0_15px_#A8977A] border-[#A8977A]/50' : ''}
+                        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    `}
+                    style={{ minHeight: '200px' }}
+                >
+                    {/* Content Container */}
+                    <div className="relative h-full flex flex-col items-center justify-center text-center p-8">
+
+                        {selectedFile ? (
+                            /* Cassette Tape Visual */
+                            <div className="w-full animate-in slide-in-from-top duration-500 ease-out">
+                                <div className="bg-[#1C1D18] border-2 border-[#2A2B24] rounded-md p-4 relative shadow-lg">
+                                    {/* Cassette Texture */}
+                                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc0JyBoZWlnaHQ9JzQnPgo8cmVjdCB3aWR0aD0nNCcgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20" />
+
+                                    {/* Label Area */}
+                                    <div className="bg-[#F2E8DC] h-24 rounded-sm mb-4 relative overflow-hidden flex items-center justify-center p-4 border border-[#D4C5A9]">
+                                        {/* Handwriting Font */}
+                                        <p className="font-bold text-2xl text-[#161711] font-mono truncate uppercase tracking-tighter" style={{ fontFamily: '"Courier New", Courier, monospace' }}>
+                                            {selectedFile.name}
                                         </p>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            <span className="text-xs text-primary font-mono uppercase border border-primary px-1">
-                                                {selectedFile?.size ? formatFileSize(selectedFile.size) : '0 B'}
-                                            </span>
-                                            <span className="text-zinc-600">/</span>
-                                            <span className="text-sm text-zinc-400 font-mono">
-                                                {selectedFile?.duration ? formatDuration(selectedFile.duration) : '0:00'}
-                                            </span>
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-red-500/20" />
+                                        <div className="absolute bottom-0 left-0 w-full h-1 bg-red-500/20" />
+                                    </div>
+
+                                    {/* Spools */}
+                                    <div className="flex justify-center gap-12 px-8">
+                                        <div className="w-12 h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
+                                            <div className="w-full h-1 bg-white/20 rotate-0" />
+                                            <div className="w-full h-[1px] absolute bg-white/20 rotate-90" />
+                                        </div>
+                                        <div className="w-12 h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
+                                            <div className="w-full h-1 bg-white/20 rotate-0" />
+                                            <div className="w-full h-[1px] absolute bg-white/20 rotate-90" />
                                         </div>
                                     </div>
-                                </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        clearFile();
-                                    }}
-                                    className="p-3 bg-zinc-800 hover:bg-destruct text-white transition-colors"
-                                    disabled={disabled}
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
 
-                            <div className="mt-6 flex justify-center">
-                                <p className="text-primary text-sm font-bold uppercase tracking-wider flex items-center gap-2 animate-pulse-fast">
-                                    <div className="w-2 h-2 bg-primary"></div>
-                                    File Locked & Loaded
-                                </p>
+                                    {/* Clear Button (Eject) */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            clearFile();
+                                        }}
+                                        className="absolute top-2 right-2 p-2 bg-[#8B3A3A] hover:bg-red-600 text-white rounded-sm shadow-md transition-colors"
+                                        title="Eject Tape"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Status Light */}
+                                <div className="mt-6 flex justify-center items-center gap-3">
+                                    <div className="w-3 h-3 rounded-full bg-green-500 led-glow animate-pulse" />
+                                    <span className="text-[#A8977A] font-mono text-xs tracking-widest uppercase">Tape Loaded • Ready</span>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        /* Upload Prompt */
-                        <label className={`block w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                            <input
-                                type="file"
-                                accept=".mp3,.wav,audio/mpeg,audio/wav"
-                                onChange={handleInputChange}
-                                disabled={disabled}
-                                className="sr-only"
-                                data-testid="file-upload-input"
-                            />
-                            <div className="flex flex-col items-center gap-6" data-testid="upload-drop-zone">
-                                {/* Simple Icon */}
+                        ) : (
+                            /* Empty Slot Prompt */
+                            <label className={`block w-full h-full flex flex-col items-center justify-center gap-6 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                                <input
+                                    type="file"
+                                    accept=".mp3,.wav,audio/mpeg,audio/wav"
+                                    onChange={handleInputChange}
+                                    disabled={disabled}
+                                    className="sr-only"
+                                    data-testid="file-upload-input"
+                                />
+
+                                {/* Slot Visual */}
                                 <div className={`
-                                    w-20 h-20 border-2 border-dashed border-zinc-700 flex items-center justify-center transition-all duration-300
-                                    ${isDragging ? 'border-primary bg-primary/10' : 'group-hover:border-white group-hover:bg-zinc-900'}
+                                    w-full h-full absolute inset-0 
+                                    bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.5)_10px,rgba(0,0,0,0.5)_20px)] 
+                                    opacity-20 pointer-events-none transition-opacity duration-300
+                                    ${isDragging ? 'opacity-0' : 'opacity-20'}
+                                `} />
+
+                                <div className={`
+                                    w-24 h-24 border-4 border-dashed border-[#45362C] rounded-lg flex items-center justify-center transition-all duration-300 z-10
+                                    ${isDragging ? 'border-[#A8977A] scale-110 bg-[#A8977A]/10' : 'group-hover:border-[#F2E8DC]/50'}
                                 `}>
                                     <Upload
-                                        className={`w-8 h-8 transition-colors duration-300 ${isDragging ? 'text-primary' : 'text-zinc-500 group-hover:text-white'}`}
+                                        className={`w-10 h-10 transition-colors duration-300 ${isDragging ? 'text-[#A8977A]' : 'text-[#45362C] group-hover:text-[#F2E8DC]'}`}
                                     />
                                 </div>
 
-                                <div className="space-y-3">
-                                    <h3 className="text-3xl font-black font-outfit text-white uppercase tracking-tighter group-hover:text-primary transition-colors">
-                                        {isDragging ? 'Drop It' : 'Upload Track'}
+                                <div className="space-y-2 z-10 relative">
+                                    <h3 className="text-2xl font-bold font-outfit text-[#F2E8DC] uppercase tracking-wide group-hover:text-[#A8977A] transition-colors">
+                                        {isDragging ? 'Insert Tape' : 'Load Audio'}
                                     </h3>
-                                    <p className="text-zinc-500 font-mono text-sm uppercase tracking-wide">
-                                        Drag & drop or click to browse
-                                        <br />
-                                        <span className="text-zinc-600 mt-1 block">MP3 / WAV • Max 25MB</span>
+                                    <p className="text-[#8F7D60] font-mono text-xs uppercase tracking-widest">
+                                        MP3 / WAV • Max 25MB
                                     </p>
                                 </div>
-                            </div>
-                        </label>
-                    )}
+                            </label>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="mt-6 p-4 bg-destruct text-white flex items-center gap-3 border border-white shadow-[4px_4px_0px_white]">
+                <div className="mt-6 p-4 bg-[#8B3A3A] text-white flex items-center gap-3 border border-[#45362C] shadow-lg">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-sm font-bold uppercase tracking-wide">{error}</p>
                 </div>
             )}
         </div>
     );
-}
+});
 

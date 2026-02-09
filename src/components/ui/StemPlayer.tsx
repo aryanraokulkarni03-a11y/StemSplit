@@ -19,7 +19,7 @@ interface StemPlayerProps {
     onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
-export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
+export const StemPlayer = React.memo(function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
@@ -27,7 +27,7 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
 
-    const config = STEM_CONFIG[stem.name];
+    const config = STEM_CONFIG[stem.name] || { label: stem.name, color: '#808080' };
 
     useEffect(() => {
         const audio = audioRef.current;
@@ -60,7 +60,7 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
         } else {
             audio.play();
         }
-        setIsPlaying(!isPlaying);
+        setIsPlaying(prev => !prev);
         onPlayStateChange?.(!isPlaying);
     }, [isPlaying, onPlayStateChange]);
 
@@ -70,11 +70,7 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
         if (audioRef.current) {
             audioRef.current.volume = newVolume;
         }
-        if (newVolume === 0) {
-            setIsMuted(true);
-        } else {
-            setIsMuted(false);
-        }
+        setIsMuted(newVolume === 0);
     }, []);
 
     const toggleMute = useCallback(() => {
@@ -88,14 +84,6 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
             }
         }
     }, [isMuted, volume]);
-
-    const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const time = parseFloat(e.target.value);
-        setCurrentTime(time);
-        if (audioRef.current) {
-            audioRef.current.currentTime = time;
-        }
-    }, []);
 
     const handleWaveformSeek = useCallback((time: number) => {
         setCurrentTime(time);
@@ -120,24 +108,24 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
-        <div className="brutalist-card p-6 bg-zinc-900 border border-zinc-800 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_#333]">
+        <div className="brutalist-card p-6 bg-[#1C1D18] border border-[#45362C] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_#45362C]">
             <audio ref={audioRef} src={stem.url} preload="metadata" />
 
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <div
-                        className="w-12 h-12 flex items-center justify-center border-2 border-black"
+                        className="w-12 h-12 flex items-center justify-center border-2 border-[#161711]"
                         style={{
                             backgroundColor: config.color,
-                            boxShadow: `4px 4px 0px white`
+                            boxShadow: `4px 4px 0px #F2E8DC`
                         }}
                     >
-                        <div className="w-8 h-8 bg-black"></div>
+                        <div className="w-8 h-8 bg-[#161711]"></div>
                     </div>
                     <div>
                         <h3 className="font-bold text-xl text-white font-outfit uppercase tracking-tighter">{config.label}</h3>
-                        <p className="text-xs text-zinc-500 font-mono tracking-wider">
+                        <p className="text-xs text-zinc-500 font-mono tracking-wider tabular-nums">
                             {formatDuration(currentTime)} / {formatDuration(duration || 0)}
                         </p>
                     </div>
@@ -145,7 +133,8 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
 
                 <button
                     onClick={handleDownload}
-                    className="p-3 bg-zinc-800 hover:bg-white hover:text-black transition-colors border border-black"
+                    className="p-3 bg-zinc-800 hover:bg-white hover:text-black transition-colors border border-black focus-visible:ring-2 focus-visible:ring-white outline-none"
+                    aria-label={`Download ${config.label} stem`}
                     title={`Download ${config.label}`}
                 >
                     <Download className="w-5 h-5" />
@@ -185,6 +174,7 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
                     style={{
                         boxShadow: isPlaying ? `0 0 0 2px ${config.color}` : 'none'
                     }}
+                    aria-label={isPlaying ? `Pause ${config.label}` : `Play ${config.label}`}
                     data-testid={`play-button-${stem.name}`}
                 >
                     {isPlaying ? (
@@ -198,7 +188,8 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
                 <div className="flex items-center gap-3 flex-1 bg-black p-3 border border-zinc-800">
                     <button
                         onClick={toggleMute}
-                        className="p-1.5 hover:text-white text-zinc-500 transition-colors"
+                        className="p-1.5 hover:text-white text-zinc-500 transition-colors focus-visible:text-white outline-none"
+                        aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}
                     >
                         {isMuted || volume === 0 ? (
                             <VolumeX className="w-5 h-5" />
@@ -213,6 +204,7 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
                         step={0.01}
                         value={isMuted ? 0 : volume}
                         onChange={handleVolumeChange}
+                        aria-label={`${config.label} volume`}
                         className="w-full h-2 bg-zinc-800 appearance-none cursor-pointer accent-white"
                         style={{
                             backgroundImage: `linear-gradient(${config.color}, ${config.color})`,
@@ -224,13 +216,13 @@ export function StemPlayer({ stem, onPlayStateChange }: StemPlayerProps) {
             </div>
         </div>
     );
-}
+});
 
 interface StemGridProps {
     stems: StemResult[];
 }
 
-export function StemGrid({ stems }: StemGridProps) {
+export const StemGrid = React.memo(function StemGrid({ stems }: StemGridProps) {
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleDownloadAll = useCallback(async () => {
@@ -291,5 +283,4 @@ export function StemGrid({ stems }: StemGridProps) {
             </div>
         </div>
     );
-}
-
+});

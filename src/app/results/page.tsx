@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Music2, ArrowLeft, Upload, CheckCircle2, Sparkles } from 'lucide-react';
-import { StemResult } from '@/types/audio';
-import { Button } from '@/components/ui/ProgressBar';
+import { StemResult, STEM_CONFIG } from '@/types/audio';
+// Button removed as it was unused
 
 const StemGrid = dynamic(
     () => import('@/components/ui/StemPlayer').then((mod) => mod.StemGrid),
@@ -53,16 +53,18 @@ export default function ResultsPage() {
             }
 
             // Convert stored results to StemResult format
-            const stemResults: StemResult[] = storedResults.map(r => ({
-                name: r.name,
-                label: r.label,
-                color: r.color,
-                audioBuffer: null,
-                blob: null, // Will be recreated from URL if needed
-                url: r.url,
-                isPlaying: false,
-                volume: 1,
-            }));
+            const stemResults: StemResult[] = storedResults
+                .filter(r => STEM_CONFIG[r.name]) // Filter out stale stems (drums, bass, etc.)
+                .map(r => ({
+                    name: r.name as StemResult['name'], // Safe cast after filter
+                    label: r.label,
+                    color: r.color,
+                    audioBuffer: null,
+                    blob: null, // Will be recreated from URL if needed
+                    url: r.url,
+                    isPlaying: false,
+                    volume: 1,
+                }));
 
             setStems(stemResults);
             setLoading(false);
@@ -94,96 +96,70 @@ export default function ResultsPage() {
     }
 
     return (
-        <div className="min-h-screen py-20 px-4">
-            <div className="max-w-4xl mx-auto">
-                {/* Success Header */}
-                <div className="text-center mb-16">
-                    <div className="inline-block relative">
-                        <div className="absolute inset-0 bg-emerald-500/20 blur-3xl animate-pulse-slow rounded-full" />
-                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center relative z-10 shadow-2xl animate-float">
-                            <CheckCircle2 className="w-12 h-12 text-white" />
+        <div className="min-h-screen py-20 px-4 bg-leather">
+            <div className="max-w-6xl mx-auto">
+                {/* Mixing Desk Header */}
+                <div className="text-center mb-16 relative">
+                    <div className="inline-block relative mb-6">
+                        <div className="w-20 h-20 rounded-full bg-metal-brushed border-4 border-[#2A2B24] flex items-center justify-center shadow-xl z-10 relative">
+                            <CheckCircle2 className="w-10 h-10 text-[#45362C]" />
                         </div>
+                        {/* Status light */}
+                        <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-green-500 led-glow animate-pulse" />
                     </div>
 
-                    <h1 className="text-4xl sm:text-6xl font-bold mt-8 mb-4 font-outfit tracking-tight text-white">
-                        Separation Complete
+                    <h1 className="text-4xl sm:text-5xl font-bold font-outfit tracking-tight text-[#F2E8DC] mb-2">
+                        Session Complete
                     </h1>
 
-                    <p className="text-lg text-zinc-400 max-w-lg mx-auto font-light">
+                    <p className="text-lg text-[#A8977A]/80 font-mono tracking-wide">
                         {originalFileName ? (
-                            <>
-                                Results for <span className="text-white font-medium">{originalFileName}</span>
-                            </>
+                            <>MASTER TAPE: <span className="text-[#F2E8DC] uppercase">{originalFileName}</span></>
                         ) : (
-                            'Your audio has been separated into individual stems'
+                            'STEMS READY FOR MIXDOWN'
                         )}
                     </p>
                 </div>
 
-                {/* Stems Grid */}
-                <div className="glass rounded-3xl p-6 sm:p-8 mb-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-amber-500" />
-                            Your Stems
+                {/* Console Surface */}
+                <div className="bg-metal-dark rounded-xl p-8 border border-[#45362C] shadow-2xl relative">
+                    {/* Metal Screws */}
+                    <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                    <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                    <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                    <div className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+
+                    <div className="flex items-center justify-between mb-8 border-b border-black/50 pb-4">
+                        <h2 className="text-xl font-bold font-outfit text-[#A8977A] uppercase tracking-widest flex items-center gap-2">
+                            <Sparkles className="w-5 h-5" />
+                            Console Strips
                         </h2>
-                        <span className="text-sm text-foreground/50">
-                            {stems.length} tracks
+                        <span className="text-xs font-mono text-zinc-500 bg-black/30 px-2 py-1 rounded">
+                            {stems.length} CHANNELS ACTIVE
                         </span>
                     </div>
 
                     <StemGrid stems={stems} />
                 </div>
 
-                {/* Tips Section */}
-                <div className="glass rounded-2xl p-6 mb-8">
-                    <h3 className="font-semibold mb-4">💡 What you can do with these stems:</h3>
-                    <ul className="space-y-2 text-sm text-foreground/70">
-                        <li className="flex items-start gap-2">
-                            <span className="text-sky-400">•</span>
-                            <span><strong>Practice:</strong> Mute the vocals to sing along with the instrumental</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-emerald-400">•</span>
-                            <span><strong>Learn:</strong> Isolate drums or bass to study rhythms and patterns</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-amber-400">•</span>
-                            <span><strong>Remix:</strong> Use individual stems to create your own remixes</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-pink-400">•</span>
-                            <span><strong>Produce:</strong> Sample and integrate stems into your productions</span>
-                        </li>
-                    </ul>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button
-                        variant="primary"
-                        size="lg"
+                {/* Footer Controls */}
+                <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8">
+                    {/* Tactile Buttons */}
+                    <button
                         onClick={handleProcessAnother}
-                        icon={<Upload className="w-5 h-5" />}
-                        data-testid="process-another-btn"
+                        className="btn-tactile px-8 py-4 text-[#161711] font-bold uppercase rounded-sm flex items-center gap-3 active:scale-95"
                     >
-                        Process Another File
-                    </Button>
+                        <Upload className="w-5 h-5" />
+                        Load New Tape
+                    </button>
+
                     <Link href="/">
-                        <Button
-                            variant="secondary"
-                            size="lg"
-                            icon={<ArrowLeft className="w-5 h-5" />}
-                        >
-                            Back to Home
-                        </Button>
+                        <button className="text-[#A8977A] hover:text-[#F2E8DC] font-mono text-sm tracking-widest uppercase transition-colors flex items-center gap-2">
+                            <ArrowLeft className="w-4 h-4" />
+                            Return to Storage
+                        </button>
                     </Link>
                 </div>
-
-                {/* Footer Note */}
-                <p className="text-center text-sm text-foreground/40 mt-8">
-                    All processing was done in your browser. Your audio files never left your device.
-                </p>
             </div>
         </div>
     );

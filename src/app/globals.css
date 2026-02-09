@@ -1,24 +1,85 @@
-@import "tailwindcss";
+@import "@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
 
 :root {
-  /* 🔴 Singscape Brutalist Theme */
-  --background: #000000;
-  /* Pure Black */
-  --foreground: #ffffff;
-  /* Pure White */
+  /* 🍂 Singscape Earthy Luxury Theme */
+  --background: #161711;
+  /* Warm Charcoal */
+  --foreground: #F2E8DC;
+  /* Bone White */
 
-  --primary: #e50914;
-  /* Spotify Red / International Orange */
-  --secondary: #ff5500;
-  /* SoundCloud Orange */
-  --accent: #ffff00;
-  /* Cyber Yellow */
-  --destruct: #ff0000;
+  --primary: #A8977A;
+  /* Mira Beige / Gold */
+  --secondary: #45362C;
+  /* Mocha / Dark Brown */
 
-  /* Brutalist Surface Tokens */
-  --surface-border: #333333;
-  --surface-bg: #111111;
-  --surface-hover: #222222;
+  --accent: #D4C5A9;
+  /* Light Beige */
+  --destruct: #8B3A3A;
+  /* Muted Red */
+
+  /* Surface Tokens */
+  --surface-border: #45362C;
+  --surface-bg: #1C1D18;
+  --surface-hover: #2A2B24;
 }
 
 @theme inline {
@@ -35,99 +96,79 @@ body {
   overflow-x: hidden;
 }
 
-/* 🟥 Brutalist Utility Classes */
+/* 🧱 Luxury Brutalist Utility Classes */
 .brutalist-card {
   background: var(--surface-bg);
   border: 1px solid var(--surface-border);
-  box-shadow: 4px 4px 0px var(--primary);
-  /* Hard Shadow */
-  transition: all 0.2s ease;
-  border-radius: 0px;
-  /* Sharp Edges */
+  box-shadow: 6px 6px 0px var(--secondary);
+  /* Soft Brown Shadow */
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 2px;
+  /* Slight softening */
 }
 
 .brutalist-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--secondary);
-  border-color: var(--foreground);
+  box-shadow: 8px 8px 0px var(--primary);
+  /* Gold Shadow on Hover */
+  border-color: var(--primary);
 }
 
 .brutalist-button {
   background: var(--primary);
-  color: white;
+  color: #161711;
   border: none;
-  border-radius: 0px;
-  font-weight: 700;
+  border-radius: 2px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.2s;
+  letter-spacing: 0.08em;
+  transition: all 0.3s;
 }
 
 .brutalist-button:hover {
-  background: var(--secondary);
-  box-shadow: 4px 4px 0px white;
-  transform: translate(-2px, -2px);
+  background: #C4B295;
+  box-shadow: 4px 4px 0px var(--secondary);
+  transform: translateY(-2px);
+  color: #000;
 }
 
-/* 🌌 Atmosphere (Subtle Grain) */
+/* 🌌 Atmosphere (Grain) */
 .grain-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
 }
 
-/* ✨ Neon Typography */
+/* ✨ Typography */
 .glow-text {
-  text-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+  text-shadow: 0 0 30px rgba(168, 151, 122, 0.3);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #e50914 0%, #ff5500 100%);
+  background: linear-gradient(135deg, #A8977A 0%, #E3D5C0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* 🌈 Stem Colors (Fire Tones) */
+/* 🌈 Stem Colors (Earthy Tones) */
 .stem-vocals {
-  color: #ff5500;
-  /* Orange */
-  text-shadow: 0 0 10px rgba(255, 85, 0, 0.4);
+  color: #A8977A;
+  /* Beige */
 }
 
-.stem-drums {
-  color: #e50914;
-  /* Red */
-  text-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
-}
-
-.stem-bass {
-  color: #ffff00;
-  /* Yellow */
-  text-shadow: 0 0 10px rgba(255, 255, 0, 0.4);
-}
-
-.stem-other {
-  color: #ffffff;
-  /* White */
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+.stem-no_vocals {
+  color: #8C705F;
+  /* Muted Cocoa */
 }
 
 .bg-stem-vocals {
-  background-color: #ff5500;
+  background-color: #A8977A;
 }
 
-.bg-stem-drums {
-  background-color: #e50914;
-}
-
-.bg-stem-bass {
-  background-color: #d4d400;
-}
-
-.bg-stem-other {
-  background-color: #888888;
+.bg-stem-no_vocals {
+  background-color: #8C705F;
 }
 
 /* 🎭 Animations */
@@ -141,7 +182,7 @@ body {
   }
 }
 
-@keyframes pulse-fast {
+@keyframes pulse-soft {
 
   0%,
   100% {
@@ -149,33 +190,128 @@ body {
   }
 
   50% {
-    opacity: 0.5;
+    opacity: 0.7;
   }
 }
 
 .animate-spin-vinyl {
-  animation: spin-slow 8s linear infinite;
+  animation: spin-slow 12s linear infinite;
 }
 
 .animate-pulse-fast {
-  animation: pulse-fast 0.5s ease-in-out infinite;
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* 🧶 Skeuomorphic Textures */
+.bg-leather {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(hsla(0, 0%, 100%, 0.05), transparent),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.bg-metal-brushed {
+  background:
+    repeating-linear-gradient(90deg,
+      hsla(0, 0%, 50%, 0.1) 0px,
+      hsla(0, 0%, 50%, 0.1) 1px,
+      transparent 1px,
+      transparent 2px),
+    linear-gradient(to bottom, #d4c5a9, #a8977a);
+}
+
+.bg-metal-dark {
+  background:
+    repeating-linear-gradient(90deg,
+      hsla(0, 0%, 0%, 0.1) 0px,
+      hsla(0, 0%, 0%, 0.1) 1px,
+      transparent 1px,
+      transparent 2px),
+    linear-gradient(to bottom, #2a2b24, #1c1d18);
+}
+
+/* 🎛️ Physical Controls */
+.knob-shadow {
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.5),
+    inset 0 2px 5px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.btn-tactile {
+  box-shadow:
+    0 4px 0 #45362C,
+    0 6px 6px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(to bottom, #A8977A, #8F7D60);
+  border: 1px solid #C4B295;
+  transition: all 0.1s ease;
+}
+
+.btn-tactile:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 0 0 #45362C,
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.slot-inset {
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.8),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.1);
+  background: #0f100c;
+  border: 1px solid #2A2B24;
+}
+
+/* 💡 LED Indicators */
+.led-glow {
+  box-shadow: 0 0 10px var(--primary), inset 0 0 5px white;
+}
+
+/* 🌀 Vinyl Textures */
+.vinyl-grooves {
+  background: repeating-radial-gradient(#111 0,
+      #111 2px,
+      #222 3px,
+      #222 4px);
+}
+
+/* 📏 Analog Meters */
+@keyframes needle-move {
+  0% {
+    transform: rotate(-45deg);
+  }
+
+  100% {
+    transform: rotate(45deg);
+  }
+}
+
+.needle-transition {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rack-unit {
+  background: linear-gradient(to bottom, #2a2b24, #1c1d18);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 /* Scrollbar Polish */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: #161711;
   border-left: 1px solid #333;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #e50914;
-  border: 1px solid #000;
+  background: #45362C;
+  border: 1px solid #161711;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ff5500;
+  background: #A8977A;
 }

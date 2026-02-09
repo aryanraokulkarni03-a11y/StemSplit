@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { spawn } from 'child_process';
 import path from 'path';
 
 export const runtime = 'nodejs';
 
 // Stem types available for separation
-const STEM_TYPES = ['vocals', 'drums', 'bass', 'other'] as const;
+const STEM_TYPES = ['vocals', 'no_vocals'] as const;
 type StemType = typeof STEM_TYPES[number];
 
 interface SeparationRequest {
@@ -14,15 +13,28 @@ interface SeparationRequest {
     stems?: StemType[];
 }
 
-interface StemStatus {
-    name: StemType;
-    status: 'pending' | 'processing' | 'complete' | 'error';
-    progress: number;
-}
+// Check if Clerk is configured
+const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 // POST /api/separate - Initiate REAL stem separation using Demucs
 export async function POST(request: NextRequest) {
     try {
+        let token: string | null = null;
+
+        // Only attempt auth if Clerk is configured
+        if (isClerkConfigured) {
+            const { auth } = await import('@clerk/nextjs/server');
+            const { getToken } = await auth();
+            token = await getToken();
+
+            if (!token) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        } else {
+            // Dev mode - use a placeholder token
+            token = 'dev_token_no_auth';
+        }
+
         const body = await request.json() as SeparationRequest;
 
         if (!body.fileName) {
@@ -33,34 +45,37 @@ export async function POST(request: NextRequest) {
         const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const outputDir = path.join(process.cwd(), 'public', 'separated', jobId);
 
-        // Input file path (Assumes file was uploaded to public/uploads)
-        // TODO: In Phase 2.1, ensure upload endpoint saves here or use absolute path from upload response
+        // Input file path
         const inputFilePath = path.join(process.cwd(), 'public', 'uploads', body.fileName);
 
-        console.log(`[API] Starting Demucs job ${jobId} for file ${inputFilePath}`);
+        console.log(`[API] Triggering FastAPI job for file ${inputFilePath}`);
 
-        // Spawn Python process DETACHED so it survives the request
-        const pythonScript = path.join(process.cwd(), 'backend', 'python', 'worker.py');
-
-        // We use 'python' assuming it's in PATH. If using venv, might need absolute path to venv/Scripts/python
-        const pythonProcess = spawn('python', [
-            pythonScript,
-            '--input', inputFilePath,
-            '--out', outputDir
-        ], {
-            detached: true,
-            stdio: 'ignore' // Ignore stdio to allow unref
+        // Proxy to FastAPI Backend
+        const fastapiResponse = await fetch('http://localhost:8000/separate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                input_path: inputFilePath,
+                output_dir: outputDir
+            })
         });
 
-        // Unreference the child process so the parent node process can exit independently
-        // This is critical for Vercel/Next.js to not hold the request open
-        pythonProcess.unref();
+        if (!fastapiResponse.ok) {
+            const errorText = await fastapiResponse.text();
+            console.error('[API] FastAPI error:', errorText);
+            throw new Error(`FastAPI backend failed: ${errorText}`);
+        }
+
+        const { job_id } = await fastapiResponse.json();
 
         return NextResponse.json({
             success: true,
-            jobId,
-            statusEndpoint: `/api/separate/${jobId}`,
-            message: 'Separation job started in background.',
+            jobId: job_id,
+            statusEndpoint: `/api/separate/${job_id}`,
+            message: 'Separation job started on AI microservice.',
         });
 
     } catch (error) {

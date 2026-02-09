@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Music2, AlertCircle, ArrowLeft } from 'lucide-react';
-import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Music2, AlertCircle } from 'lucide-react';
+// ProgressBar removed as it was unused
 import { ProcessingStatus, StemResult, STEM_CONFIG } from '@/types/audio';
-import { audioBufferToWav, simulateStemSeparation } from '@/lib/audio-utils';
+import { audioBufferToWav } from '@/lib/audio-utils';
+import { useAuth } from "@clerk/nextjs";
 
 export default function ProcessPage() {
     const router = useRouter();
@@ -16,6 +17,7 @@ export default function ProcessPage() {
     });
     const [error, setError] = useState<string | null>(null);
 
+    const { getToken } = useAuth();
     const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
@@ -34,6 +36,8 @@ export default function ProcessPage() {
             const fileInfo = JSON.parse(fileInfoStr);
 
             try {
+                const token = await getToken();
+
                 // 1. Trigger Separation
                 setStatus({
                     stage: 'loading-model',
@@ -44,20 +48,25 @@ export default function ProcessPage() {
 
                 const startResponse = await fetch('/api/separate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ fileName: fileInfo.name }),
                 });
 
                 if (!startResponse.ok) throw new Error('Failed to start separation job');
 
-                const { jobId, statusEndpoint } = await startResponse.json();
+                const { statusEndpoint } = await startResponse.json();
 
                 // 2. Poll Status
                 pollInterval = setInterval(async () => {
                     if (isCancelled) return;
 
                     try {
-                        const statusRes = await fetch(statusEndpoint);
+                        const statusRes = await fetch(statusEndpoint, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
                         if (!statusRes.ok) return; // Skip this tick if network blip
 
                         const jobStatus = await statusRes.json();
@@ -96,6 +105,7 @@ export default function ProcessPage() {
                                 const arrayBuffer = await response.arrayBuffer();
                                 const audioContext = new AudioContext(); // Browser dependent
                                 const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                                await audioContext.close(); // Close to free resources
                                 return { name, audioBuffer, url: `/${relativePath}` };
                             };
 
@@ -167,9 +177,7 @@ export default function ProcessPage() {
         };
     }, [router, retryCount]);
 
-    const handleCancel = useCallback(() => {
-        router.push('/');
-    }, [router]);
+    // handleCancel removed as it was unused
 
     const handleRetry = useCallback(() => {
         setError(null);
@@ -177,132 +185,109 @@ export default function ProcessPage() {
     }, []);
 
     // Map stem names to icons
-    const getStemIcon = (name: string) => {
-        switch (name) {
-            case 'vocals': return <Music2 className="w-6 h-6" />; // Using Music2 as generic, or could import Mic2
-            case 'drums': return <div className="w-6 h-6 border-2 border-current rounded-full" />; // Abstract drum
-            case 'bass': return <div className="w-6 h-6 border-b-4 border-current rounded-lg" />; // Abstract bass
-            default: return <Music2 className="w-6 h-6" />;
-        }
-    };
+    // getStemIcon removed as it was unused
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-20" data-testid="process-page-container">
-            <div className="w-full max-w-4xl relative z-10">
-                {/* Header */}
-                <div className="text-center mb-16">
-                    <div className="inline-block relative">
-                        <div className="w-24 h-24 bg-primary flex items-center justify-center relative z-10 shadow-[4px_4px_0px_white] transition-transform hover:-translate-y-1">
-                            <Music2 className="w-12 h-12 text-white" />
+        <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-leather" data-testid="process-page-container">
+            <div className="w-full max-w-2xl relative z-10">
+
+                {/* Rack Mount Header */}
+                <div className="bg-metal-dark p-6 rounded-t-lg border-x border-t border-[#45362C] shadow-2xl relative overflow-hidden">
+                    {/* Screws */}
+                    <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+                    <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
+
+                    <div className="text-center">
+                        <div className="inline-flex items-center gap-3 mb-2 opacity-80">
+                            <div className={`w-2 h-2 rounded-full ${status.stage === 'error' ? 'bg-red-500' : 'bg-green-500'} led-glow animate-pulse`} />
+                            <span className="font-mono text-xs text-[#A8977A] tracking-[0.2em] uppercase">Processing Unit Active</span>
                         </div>
+                        <h1 className="text-3xl font-bold text-[#F2E8DC] font-outfit uppercase tracking-tight">
+                            signal separation
+                        </h1>
                     </div>
-
-                    <h1 className="text-4xl sm:text-6xl font-bold mt-8 mb-4 font-outfit tracking-tight">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-                            {status.stage === 'complete' ? 'Separation Complete' : 'Separating Audio'}
-                        </span>
-                    </h1>
-
-                    <p className="text-lg text-zinc-400 max-w-lg mx-auto font-light"
-                        data-testid={status.stage === 'complete' ? 'processing-complete' : 'processing-status'}>
-                        {status.stage === 'complete'
-                            ? 'Your stems are ready for download.'
-                            : 'Our AI is analyzing frequencies and isolating tracks.'}
-                    </p>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="brutalist-card p-8">
-
-                    {/* Error State */}
+                {/* Rack Units (Stems) */}
+                <div className="bg-[#161711] border-x border-[#45362C]">
                     {error ? (
-                        <div className="text-center py-10">
-                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <AlertCircle className="w-8 h-8 text-red-500" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-red-500 mb-2">Processing Failed</h3>
-                            <p className="text-zinc-400 mb-8">{error}</p>
-                            <div className="flex gap-4 justify-center">
-                                <button
-                                    onClick={handleRetry}
-                                    className="px-8 py-3 rounded-full bg-red-500 hover:bg-red-600 text-white font-medium transition-all hover:scale-105"
-                                >
-                                    Try Again
-                                </button>
-                                <button
-                                    onClick={handleCancel}
-                                    className="px-8 py-3 rounded-full bg-white/5 hover:bg-white/10 text-white font-medium transition-all"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                        <div className="p-12 text-center bg-red-900/20">
+                            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                            <p className="text-red-400 font-mono mb-6">{error}</p>
+                            <button onClick={handleRetry} className="btn-tactile px-6 py-2 text-[#161711] font-bold rounded-sm">RETRY SEQUENCE</button>
                         </div>
                     ) : (
-                        <>
-                            {/* Processor Visualizer (The Grid of Cards) */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                                {Object.entries(STEM_CONFIG).map(([key, config], index) => {
-                                    const isActive = status.message.toLowerCase().includes(key);
-                                    const isComplete = status.progress > (15 + (index + 1) * 20) || status.stage === 'complete';
-                                    const isWaiting = !isActive && !isComplete;
+                        <div className="divide-y divide-black">
+                            {Object.entries(STEM_CONFIG).map(([key, config], index) => {
+                                const isActive = status.message.toLowerCase().includes(key);
+                                const isComplete = status.progress > (15 + (index + 1) * 20) || status.stage === 'complete';
 
-                                    return (
-                                        <div
-                                            key={key}
-                                            className={`
-                                                relative overflow-hidden p-6 transition-all duration-200 border
-                                                ${isActive ? 'bg-zinc-900 shadow-[2px_2px_0px_white] border-primary' : 'border-zinc-800'}
-                                                ${isComplete ? 'bg-zinc-900/50 border-primary' : ''}
-                                                ${isWaiting ? 'opacity-40' : 'opacity-100'}
-                                            `}
-                                        >
-                                            {/* Glow Background */}
-                                            {isActive && (
-                                                <div
-                                                    className="absolute inset-0 opacity-20 animate-pulse"
-                                                    style={{ backgroundColor: config.color }}
-                                                />
-                                            )}
+                                // Calculate needle rotation (-45 to 45 deg)
+                                // If complete, peg to 45. If active, wiggle around 0. If waiting, -45.
+                                let rotation = -45;
+                                if (isComplete) rotation = 45;
+                                else if (isActive) rotation = -10 + (Math.random() * 20) + (status.progress / 3); // Simulated movement
 
-                                            <div className="relative z-10 flex flex-col items-center">
-                                                <div
-                                                    className={`
-                                                        w-12 h-12 flex items-center justify-center mb-3 transition-all border border-current
-                                                        ${isActive ? 'scale-110' : ''}
-                                                    `}
-                                                    style={{
-                                                        backgroundColor: isComplete ? config.color : `${config.color}20`,
-                                                        color: isComplete ? 'white' : config.color
-                                                    }}
-                                                >
-                                                    {getStemIcon(key)}
-                                                </div>
+                                return (
+                                    <div key={key} className="rack-unit p-6 flex items-center justify-between group relative">
+                                        {/* Screw details */}
+                                        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-black/50" />
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-black/50" />
 
-                                                <h3 className="font-semibold text-white mb-1">{config.label}</h3>
-
-                                                <span className="text-xs font-mono text-zinc-400">
-                                                    {isComplete ? 'DONE' : isActive ? 'EXTRACTING...' : 'WAITING'}
-                                                </span>
+                                        <div className="flex items-center gap-6 pl-6">
+                                            {/* Channel Label */}
+                                            <div className="w-24">
+                                                <span className="block text-xs text-[#A8977A]/60 font-mono uppercase tracking-widest mb-1">Channel</span>
+                                                <h3 className="text-xl font-bold text-[#F2E8DC] uppercase">{config.label}</h3>
                                             </div>
 
-                                            {/* Loading Bar at bottom of card */}
-                                            {isActive && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-                                                    <div className="h-full bg-white animate-shimmer w-full" />
-                                                </div>
-                                            )}
+                                            {/* Status LED */}
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className={`w-3 h-3 rounded-full transition-all duration-300 ${isComplete ? 'bg-green-500 led-glow' : isActive ? 'bg-amber-500 animate-pulse' : 'bg-zinc-800'}`} />
+                                                <span className="text-[9px] font-mono text-zinc-600 uppercase">Signal</span>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
 
-                            {/* Global Progress Bar */}
-                            <div className="max-w-xl mx-auto">
-                                <ProgressBar status={status} onCancel={handleCancel} />
-                            </div>
-                        </>
+                                        {/* Analog VU Meter */}
+                                        <div className="relative w-32 h-16 bg-[#F2E8DC] rounded-t-lg overflow-hidden border-2 border-[#161711] shadow-inner ml-auto mr-12 opacity-90">
+                                            {/* Scale markings */}
+                                            <div className="absolute bottom-0 left-[10%] w-[1px] h-3 bg-black/30 origin-bottom transform -rotate-[30deg]" />
+                                            <div className="absolute bottom-0 left-[50%] w-[1px] h-4 bg-black/30" />
+                                            <div className="absolute bottom-0 right-[10%] w-[1px] h-3 bg-red-500/50 origin-bottom transform rotate-[30deg]" />
+                                            <span className="absolute top-2 right-2 text-[8px] font-bold text-red-700">PEAK</span>
+
+                                            {/* Needle */}
+                                            <div
+                                                className="absolute bottom-[-2px] left-1/2 w-[2px] h-14 bg-red-600 origin-bottom needle-transition z-10"
+                                                style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
+                                            />
+                                            {/* Pivot */}
+                                            <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-4 h-4 bg-black rounded-full z-20" />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
+
+                {/* Rack Footer / Global Progress */}
+                <div className="bg-metal-dark p-6 rounded-b-lg border-x border-b border-[#45362C] shadow-2xl">
+                    <div className="flex items-center gap-4">
+                        <span className="font-mono text-xs text-[#A8977A] uppercase w-24">Master Out</span>
+                        <div className="flex-1 h-3 bg-black rounded-full overflow-hidden border border-zinc-700 relative">
+                            {/* Striped progress bar */}
+                            <div
+                                className="h-full bg-amber-600 transition-all duration-300"
+                                style={{ width: `${status.progress}%` }}
+                            />
+                            {/* Hatching texture overlay */}
+                            <div className="absolute inset-0 w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.2)_5px,rgba(0,0,0,0.2)_10px)] opacity-50" />
+                        </div>
+                        <span className="font-mono text-xs text-[#F2E8DC] w-10 text-right">{Math.round(status.progress)}%</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

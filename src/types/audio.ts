@@ -9,7 +9,7 @@ export interface AudioFile {
 }
 
 export interface StemResult {
-  name: 'vocals' | 'drums' | 'bass' | 'other';
+  name: 'vocals' | 'no_vocals';
   label: string;
   color: string;
   audioBuffer: AudioBuffer | null;
@@ -42,11 +42,10 @@ export interface ModelInfo {
 }
 
 // Stem configuration
+// Stem configuration
 export const STEM_CONFIG: Record<string, { label: string; color: string }> = {
-  vocals: { label: 'Vocals', color: '#e50914' },      // Brand Red
-  drums: { label: 'Drums', color: '#ffff00' },        // Hyper Yellow
-  bass: { label: 'Bass', color: '#00ff00' },          // Neon Green
-  other: { label: 'Other', color: '#00ffff' },        // Cyan (CMYK style)
+  vocals: { label: 'Vocals', color: '#A8977A' },      // Mira Beige
+  no_vocals: { label: 'Music', color: '#45362C' },    // Soft Brown
 };
 
 // File constraints

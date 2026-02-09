@@ -1,0 +1,176 @@
+/**
+ * Performance Monitoring Utilities
+ * 
+ * Web Vitals tracking and performance metrics
+ * Integrates with Vercel Analytics and custom analytics
+ */
+
+/**
+ * Web Vitals metrics
+ */
+export interface WebVitalsMetric {
+    id: string;
+    name: 'CLS' | 'FCP' | 'FID' | 'INP' | 'LCP' | 'TTFB';
+    value: number;
+    rating: 'good' | 'needs-improvement' | 'poor';
+    delta: number;
+    navigationType: 'navigate' | 'reload' | 'back-forward' | 'prerender';
+}
+
+/**
+ * Performance thresholds (Core Web Vitals)
+ */
+export const PerformanceThresholds = {
+    // Largest Contentful Paint (LCP)
+    LCP: {
+        GOOD: 2500, // ms
+        NEEDS_IMPROVEMENT: 4000, // ms
+    },
+    // First Input Delay (FID)
+    FID: {
+        GOOD: 100, // ms
+        NEEDS_IMPROVEMENT: 300, // ms
+    },
+    // Cumulative Layout Shift (CLS)
+    CLS: {
+        GOOD: 0.1,
+        NEEDS_IMPROVEMENT: 0.25,
+    },
+    // First Contentful Paint (FCP)
+    FCP: {
+        GOOD: 1800, // ms
+        NEEDS_IMPROVEMENT: 3000, // ms
+    },
+    // Interaction to Next Paint (INP)
+    INP: {
+        GOOD: 200, // ms
+        NEEDS_IMPROVEMENT: 500, // ms
+    },
+    // Time to First Byte (TTFB)
+    TTFB: {
+        GOOD: 800, // ms
+        NEEDS_IMPROVEMENT: 1800, // ms
+    },
+} as const;
+
+/**
+ * Get rating for a metric
+ */
+export function getMetricRating(
+    name: WebVitalsMetric['name'],
+    value: number
+): 'good' | 'needs-improvement' | 'poor' {
+    const thresholds = PerformanceThresholds[name];
+
+    if (value <= thresholds.GOOD) {
+        return 'good';
+    } else if (value <= thresholds.NEEDS_IMPROVEMENT) {
+        return 'needs-improvement';
+    } else {
+        return 'poor';
+    }
+}
+
+/**
+ * Report Web Vitals to analytics
+ */
+export function reportWebVitals(metric: WebVitalsMetric) {
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[Web Vitals]', {
+            name: metric.name,
+            value: Math.round(metric.value),
+            rating: metric.rating,
+        });
+    }
+
+    // Send to Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', metric.name, {
+            value: Math.round(metric.value),
+            metric_id: metric.id,
+            metric_value: metric.value,
+            metric_delta: metric.delta,
+            metric_rating: metric.rating,
+        });
+    }
+
+    // Send to Vercel Analytics
+    if (typeof window !== 'undefined' && (window as any).va) {
+        (window as any).va('track', metric.name, {
+            value: metric.value,
+            rating: metric.rating,
+        });
+    }
+
+    // TODO: Send to custom analytics endpoint
+    // fetch('/api/analytics/web-vitals', {
+    //   method: 'POST',
+    //   body: JSON.stringify(metric),
+    //   headers: { 'Content-Type': 'application/json' },
+    // });
+}
+
+/**
+ * Performance marks for custom measurements
+ */
+export const PerformanceMark = {
+    /**
+     * Mark the start of an operation
+     */
+    start(name: string) {
+        if (typeof window !== 'undefined' && window.performance) {
+            performance.mark(`${name}-start`);
+        }
+    },
+
+    /**
+     * Mark the end of an operation and measure duration
+     */
+    end(name: string) {
+        if (typeof window !== 'undefined' && window.performance) {
+            performance.mark(`${name}-end`);
+            performance.measure(name, `${name}-start`, `${name}-end`);
+
+            const measure = performance.getEntriesByName(name)[0];
+            if (measure) {
+                console.log(`[Performance] ${name}: ${Math.round(measure.duration)}ms`);
+            }
+        }
+    },
+
+    /**
+     * Clear marks and measures
+     */
+    clear(name: string) {
+        if (typeof window !== 'undefined' && window.performance) {
+            performance.clearMarks(`${name}-start`);
+            performance.clearMarks(`${name}-end`);
+            performance.clearMeasures(name);
+        }
+    },
+} as const;
+
+/**
+ * Resource timing helper
+ */
+export function getResourceTiming(resourceUrl: string) {
+    if (typeof window === 'undefined' || !window.performance) {
+        return null;
+    }
+
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const resource = resources.find((r) => r.name.includes(resourceUrl));
+
+    if (!resource) {
+        return null;
+    }
+
+    return {
+        url: resource.name,
+        duration: Math.round(resource.duration),
+        size: resource.transferSize,
+        cached: resource.transferSize === 0,
+        protocol: resource.nextHopProtocol,
+    };
+}

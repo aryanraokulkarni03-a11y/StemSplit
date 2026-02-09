@@ -1,0 +1,36 @@
+/**
+ * Custom Skeuomorphic Design Styles
+ * 
+ * This file is reserved for user's custom design system.
+ * All skeuomorphic UI elements, textures, shadows, and custom styling should be defined here.
+ * 
+ * DO NOT add generic styles - this is specifically for the custom design integration.
+ */
+
+/* ============================================
+   USER'S CUSTOM DESIGN SYSTEM
+   ============================================ */
+
+/* Custom Color Palette - To be defined by user */
+:root {
+    /* Primary Colors */
+    /* --custom-primary: ; */
+    /* --custom-secondary: ; */
+    /* --custom-accent: ; */
+
+    /* Skeuomorphic Effects */
+    /* --custom-shadow-depth-1: ; */
+    /* --custom-shadow-depth-2: ; */
+    /* --custom-shadow-depth-3: ; */
+
+    /* Textures */
+    /* --custom-texture-overlay: ; */
+    /* --custom-gradient-primary: ; */
+
+    /* Typography */
+    /* --custom-font-primary: ; */
+    /* --custom-font-secondary: ; */
+}
+
+/* Custom Component Styles */
+/* Add your skeuomorphic component styles below */
