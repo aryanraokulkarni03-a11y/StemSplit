@@ -1,52 +1,19 @@
-@import "@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
-  }
+@theme {
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
+  --color-background: #161711;
+  --color-foreground: #F2E8DC;
+
+  --color-primary: #A8977A;
+  --color-secondary: #45362C;
+  --color-accent: #D4C5A9;
+  --color-destructive: #8B3A3A;
+
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
 }
 
 @layer base {
@@ -56,66 +23,29 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-outfit), system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
-}
-
-:root {
-  /* 🍂 Singscape Earthy Luxury Theme */
-  --background: #161711;
-  /* Warm Charcoal */
-  --foreground: #F2E8DC;
-  /* Bone White */
-
-  --primary: #A8977A;
-  /* Mira Beige / Gold */
-  --secondary: #45362C;
-  /* Mocha / Dark Brown */
-
-  --accent: #D4C5A9;
-  /* Light Beige */
-  --destruct: #8B3A3A;
-  /* Muted Red */
-
-  /* Surface Tokens */
-  --surface-border: #45362C;
-  --surface-bg: #1C1D18;
-  --surface-hover: #2A2B24;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-outfit);
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-outfit), system-ui, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
 /* 🧱 Luxury Brutalist Utility Classes */
 .brutalist-card {
-  background: var(--surface-bg);
-  border: 1px solid var(--surface-border);
-  box-shadow: 6px 6px 0px var(--secondary);
-  /* Soft Brown Shadow */
+  background-color: #1C1D18;
+  border: 1px solid #45362C;
+  box-shadow: 6px 6px 0px #45362C;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border-radius: 2px;
-  /* Slight softening */
 }
 
 .brutalist-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 8px 8px 0px var(--primary);
-  /* Gold Shadow on Hover */
-  border-color: var(--primary);
+  box-shadow: 8px 8px 0px #A8977A;
+  border-color: #A8977A;
 }
 
 .brutalist-button {
-  background: var(--primary);
+  background-color: #A8977A;
   color: #161711;
   border: none;
   border-radius: 2px;
@@ -126,13 +56,13 @@ body {
 }
 
 .brutalist-button:hover {
-  background: #C4B295;
-  box-shadow: 4px 4px 0px var(--secondary);
+  background-color: #C4B295;
+  box-shadow: 4px 4px 0px #45362C;
   transform: translateY(-2px);
   color: #000;
 }
 
-/* 🌌 Atmosphere (Grain) */
+/* 🌌 Atmosphere */
 .grain-bg {
   position: fixed;
   inset: 0;
@@ -149,18 +79,17 @@ body {
 .text-gradient {
   background: linear-gradient(135deg, #A8977A 0%, #E3D5C0 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* 🌈 Stem Colors (Earthy Tones) */
+/* 🌈 Stem Colors */
 .stem-vocals {
   color: #A8977A;
-  /* Beige */
 }
 
 .stem-no_vocals {
   color: #8C705F;
-  /* Muted Cocoa */
 }
 
 .bg-stem-vocals {
@@ -202,30 +131,18 @@ body {
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
-/* 🧶 Skeuomorphic Textures */
+/* 🧶 Textures */
 .bg-leather {
-  background-color: var(--background);
+  background-color: #161711;
   background-image: radial-gradient(hsla(0, 0%, 100%, 0.05), transparent);
 }
 
 .bg-metal-brushed {
-  background:
-    repeating-linear-gradient(90deg,
-      hsla(0, 0%, 50%, 0.1) 0px,
-      hsla(0, 0%, 50%, 0.1) 1px,
-      transparent 1px,
-      transparent 2px),
-    linear-gradient(to bottom, #d4c5a9, #a8977a);
+  background: linear-gradient(to bottom, #d4c5a9, #a8977a);
 }
 
 .bg-metal-dark {
-  background:
-    repeating-linear-gradient(90deg,
-      hsla(0, 0%, 0%, 0.1) 0px,
-      hsla(0, 0%, 0%, 0.1) 1px,
-      transparent 1px,
-      transparent 2px),
-    linear-gradient(to bottom, #2a2b24, #1c1d18);
+  background: linear-gradient(to bottom, #2a2b24, #1c1d18);
 }
 
 /* 🎛️ Physical Controls */
@@ -260,32 +177,9 @@ body {
   border: 1px solid #2A2B24;
 }
 
-/* 💡 LED Indicators */
-.led-glow {
-  box-shadow: 0 0 10px var(--primary), inset 0 0 5px white;
-}
-
-/* 🌀 Vinyl Textures */
+/* 🌀 Vinyl grooves */
 .vinyl-grooves {
-  background: repeating-radial-gradient(#111 0,
-      #111 2px,
-      #222 3px,
-      #222 4px);
-}
-
-/* 📏 Analog Meters */
-@keyframes needle-move {
-  0% {
-    transform: rotate(-45deg);
-  }
-
-  100% {
-    transform: rotate(45deg);
-  }
-}
-
-.needle-transition {
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  background-color: #111;
 }
 
 .rack-unit {
