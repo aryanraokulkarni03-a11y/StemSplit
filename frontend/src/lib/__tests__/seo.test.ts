@@ -28,15 +28,15 @@ describe('SEO Utilities', () => {
             expect((defaultMetadata.keywords as string[]).length).toBeGreaterThan(0);
         });
 
-        it('should have Open Graph configuration', () => {
+        it('should have OpenGraph configuration', () => {
             expect(defaultMetadata.openGraph).toBeDefined();
-            expect(defaultMetadata.openGraph?.type).toBe('website');
-            expect(defaultMetadata.openGraph?.siteName).toBeDefined();
+            expect((defaultMetadata.openGraph as any)?.type).toBe('website');
+            expect((defaultMetadata.openGraph as any)?.siteName).toBeDefined();
         });
 
         it('should have Twitter Card configuration', () => {
             expect(defaultMetadata.twitter).toBeDefined();
-            expect(defaultMetadata.twitter?.card).toBe('summary_large_image');
+            expect((defaultMetadata.twitter as any)?.card).toBe('summary_large_image');
         });
     });
 
@@ -69,7 +69,7 @@ describe('SEO Utilities', () => {
             });
 
             expect(metadata.robots).toBeDefined();
-            expect(metadata.robots?.index).toBe(false);
+            expect((metadata.robots as any)?.index).toBe(false);
         });
     });
 

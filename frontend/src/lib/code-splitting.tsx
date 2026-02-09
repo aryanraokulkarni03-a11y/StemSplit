@@ -36,7 +36,7 @@ export function ErrorFallback({ error }: { error: Error }) {
 export function createDynamicComponent<P = Record<string, unknown>>(
     importFn: () => Promise<{ default: ComponentType<P> }>,
     options?: {
-        loading?: () => JSX.Element;
+        loading?: () => React.ReactNode;
         ssr?: boolean;
     }
 ) {
