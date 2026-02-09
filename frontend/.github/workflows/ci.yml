@@ -250,6 +250,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          text: 'Production deployment ${{ job.status }}'
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          text: 'Production deployment status: ${{ job.status }}'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} # Ensure this secret is set in GitHub
