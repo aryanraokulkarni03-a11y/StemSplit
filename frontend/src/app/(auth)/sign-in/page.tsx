@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,20 +14,7 @@ const signInSchema = z.object({
 
 type SignInInput = z.infer<typeof signInSchema>;
 
-/**
- * Sign In Page Component
- * 
- * Features:
- * - Email/Password sign-in
- * - OAuth providers (Google, GitHub)
- * - Form validation with Zod
- * - Error handling
- * - Redirect after sign-in
- * - Link to sign-up page
- * 
- * TODO: Integrate user's custom skeuomorphic design
- */
-export default function SignInPage() {
+function SignInContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -175,5 +162,13 @@ export default function SignInPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignInPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+            <SignInContent />
+        </Suspense>
     );
 }

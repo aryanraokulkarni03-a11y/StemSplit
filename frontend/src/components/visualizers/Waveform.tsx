@@ -51,7 +51,6 @@ export function Waveform({
             barRadius: 2,
             cursorWidth: 2,
             cursorColor: progressColor,
-            responsive: true,
         });
 
         // Load audio

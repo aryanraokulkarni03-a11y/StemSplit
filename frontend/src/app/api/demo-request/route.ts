@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
             data: {
                 name: validatedData.name,
                 email: validatedData.email,
-                company: validatedData.company || null,
-                message: validatedData.message || null,
+                company: validatedData.company || '',
+                message: validatedData.message || '',
                 status: 'pending',
             },
         });

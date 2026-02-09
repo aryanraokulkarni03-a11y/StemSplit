@@ -2,7 +2,7 @@
  * Integration Tests for Contact API Route
  */
 
-import { POST } from '../../contact/route';
+import { POST } from '../contact/route';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
