@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
 
         console.log(`[API] Triggering FastAPI job for file ${inputFilePath}`);
 
-        // Proxy to FastAPI Backend
-        const fastapiResponse = await fetch('http://localhost:8000/separate', {
+        // Proxy to FastAPI Backend - Use environment variable
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const fastapiResponse = await fetch(`${backendUrl}/separate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

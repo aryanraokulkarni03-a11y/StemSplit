@@ -22,8 +22,9 @@ export async function GET(
     }
 
     try {
-        // Fetch status from the Python microservice
-        const fastapiResponse = await fetch(`http://localhost:8000/status/${jobId}`, {
+        // Fetch status from the Python microservice - Use environment variable
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const fastapiResponse = await fetch(`${backendUrl}/status/${jobId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
