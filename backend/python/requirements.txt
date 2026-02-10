@@ -11,7 +11,7 @@ python-dotenv
 # Use CPU-only PyTorch wheels to keep image size below Railway's 4GB limit.
 # The extra index points to the official CPU wheel repo.
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.4.0+cpu
+torch==2.10.0+cpu
 
 # Demucs for source separation (compatible with torch 2.2 CPU).
 demucs
