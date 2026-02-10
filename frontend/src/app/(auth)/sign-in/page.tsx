@@ -19,9 +19,10 @@ type SignInInput = z.infer<typeof signInSchema>;
 function SignInContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || '';
+    const rawCallback = searchParams.get('callbackUrl');
+    const callbackUrl = typeof rawCallback === 'string' ? rawCallback : '';
     const validCallbackUrl =
-        callbackUrl.startsWith('/') && callbackUrl.length > 0
+        callbackUrl && callbackUrl.startsWith('/')
             ? callbackUrl
             : '/dashboard';
 
