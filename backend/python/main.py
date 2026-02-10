@@ -12,12 +12,23 @@ import threading
 from pathlib import Path
 from processor import AudioProcessor
 
+# Environment & configuration
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+
+# Directory for persistent job metadata
+JOB_STORE_DIR = Path(os.getenv("JOB_STORE_DIR", "./job_state")).resolve()
+JOB_STORE_DIR.mkdir(parents=True, exist_ok=True)
+
 app = FastAPI(title="Singscape AI Engine", version="1.0.0")
 
 # Enable CORS for Next.js frontend
+cors_origins = ALLOWED_ORIGINS or (["*"] if DEBUG else [])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -54,32 +65,67 @@ async def get_jwks():
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verifies the Clerk JWT token."""
     token = credentials.credentials
-    
-    # Dev mode bypass - accept dev token from frontend
-    if token == "dev_token_no_auth":
+
+    # Dev mode bypass - accept dev token from frontend (development only)
+    if DEBUG and token == "dev_token_no_auth":
         print("[Auth] Dev mode token accepted")
         return {"sub": "dev_user"}
-    
+
     try:
         jwks = await get_jwks()
-        
+
         payload = jwt.decode(
-            token, 
-            jwks, 
-            algorithms=["RS256"], 
+            token,
+            jwks,
+            algorithms=["RS256"],
             issuer=CLERK_ISSUER,
             options={"verify_at_hash": False}
         )
         return payload
     except Exception as e:
         # Fallback for development if no keys are provided yet
-        if not os.getenv("CLERK_JWKS_URL"):
+        if DEBUG and not os.getenv("CLERK_JWKS_URL"):
             return {"sub": "dev_user"}
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
 
-# In-memory job repository (for demo purposes)
+# In-memory job repository (for demo purposes) + simple persistent store
 jobs = {}
+
+
+def _job_path(job_id: str) -> Path:
+    """Return the filesystem path for a job's persisted metadata."""
+    return JOB_STORE_DIR / f"{job_id}.json"
+
+
+def save_job(job_id: str) -> None:
+    """Persist a job's metadata to disk."""
+    try:
+        path = _job_path(job_id)
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(jobs[job_id], f)
+    except Exception as e:
+        # Persistence failures should not crash the API, but should be visible in logs.
+        print(f"[Jobs] Failed to persist job {job_id}: {e}")
+
+
+def load_job(job_id: str):
+    """Load a job from memory or disk, or return None if not found."""
+    if job_id in jobs:
+        return jobs[job_id]
+
+    path = _job_path(job_id)
+    if path.exists():
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                job_data = json.load(f)
+            jobs[job_id] = job_data
+            return job_data
+        except Exception as e:
+            print(f"[Jobs] Failed to load job {job_id}: {e}")
+            return None
+
+    return None
 
 class SeparationRequest(BaseModel):
     input_path: str
@@ -91,10 +137,14 @@ def run_separation_task(job_id: str, input_path: str, output_dir: str, stems: in
     try:
         jobs[job_id]["status"] = "waiting"
         jobs[job_id]["message"] = "Waiting for GPU access..."
+        jobs[job_id]["updatedAt"] = time.time()
+        save_job(job_id)
         
         with gpu_lock:
             jobs[job_id]["status"] = "processing"
             jobs[job_id]["message"] = "Separating stems with CUDA..."
+            jobs[job_id]["updatedAt"] = time.time()
+            save_job(job_id)
             
             processor = AudioProcessor(
                 output_dir=output_dir,
@@ -104,6 +154,8 @@ def run_separation_task(job_id: str, input_path: str, output_dir: str, stems: in
             def progress_callback(progress_data):
                 jobs[job_id]["progress"] = progress_data.get("progress", 0)
                 jobs[job_id]["message"] = progress_data.get("raw", "Processing...")
+                jobs[job_id]["updatedAt"] = time.time()
+                save_job(job_id)
             
             result = processor.process(input_path, callback=progress_callback)
             
@@ -112,13 +164,19 @@ def run_separation_task(job_id: str, input_path: str, output_dir: str, stems: in
                 jobs[job_id]["progress"] = 100
                 jobs[job_id]["message"] = "Separation successful."
                 jobs[job_id]["stems"] = result.get("stems")
+                jobs[job_id]["updatedAt"] = time.time()
+                save_job(job_id)
             else:
                 jobs[job_id]["status"] = "error"
                 jobs[job_id]["error"] = result.get("message", "Unknown error")
+                jobs[job_id]["updatedAt"] = time.time()
+                save_job(job_id)
                 
     except Exception as e:
         jobs[job_id]["status"] = "error"
         jobs[job_id]["error"] = str(e)
+        jobs[job_id]["updatedAt"] = time.time()
+        save_job(job_id)
 
 @app.post("/separate")
 async def start_separation(
@@ -134,8 +192,10 @@ async def start_separation(
         "progress": 0,
         "message": "Job added to queue",
         "user_id": auth.get("sub"),
-        "createdAt": time.time()
+        "createdAt": time.time(),
+        "updatedAt": time.time()
     }
+    save_job(job_id)
     
     background_tasks.add_task(
         run_separation_task, 
@@ -149,16 +209,46 @@ async def start_separation(
 
 @app.get("/status/{job_id}")
 async def get_status(job_id: str, auth: dict = Depends(verify_token)):
-    if job_id not in jobs:
+    job = load_job(job_id)
+    if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    return jobs[job_id]
+    return job
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint for frontend monitoring."""
-    return {"status": "healthy", "gpu": True, "version": "1.0.0"}
+    try:
+        # Lightweight device detection via AudioProcessor
+        processor = AudioProcessor(output_dir=str(JOB_STORE_DIR), stems=2)
+        device = processor.device
+        return {
+            "status": "healthy",
+            "device": device,
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        # Surface any engine/torch issues clearly
+        return {
+            "status": "error",
+            "device": None,
+            "version": "1.0.0",
+            "error": str(e)
+        }
+
+
+@app.on_event("startup")
+async def startup_warmup():
+    """Warm up the audio engine on startup for faster first requests."""
+    try:
+        print("[Startup] Warming up audio engine...")
+        processor = AudioProcessor(output_dir=str(JOB_STORE_DIR), stems=2)
+        print(f"[Startup] Audio engine ready. Device: {processor.device}")
+    except Exception as e:
+        # Do not block startup, but log for debugging
+        print(f"[Startup] Audio engine warmup failed: {e}")
 
 if __name__ == "__main__":
     import uvicorn
+    host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host=host, port=port)

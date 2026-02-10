@@ -284,3 +284,30 @@ jobs:
           text: 'Production deployment status: ${{ job.status }}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} # Ensure this secret is set in GitHub
+
+  # Deploy Backend (FastAPI) to Railway on main branch
+  deploy-backend:
+    name: Deploy Backend to Railway
+    runs-on: ubuntu-latest
+    needs: [build, e2e, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for Railway CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy backend service to Railway
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+        run: |
+          # The railway.json at repo root points to backend/python/Dockerfile
+          # Ensure RAILWAY_API_TOKEN is configured in GitHub secrets and the project is linked.
+          railway up --ci --detached

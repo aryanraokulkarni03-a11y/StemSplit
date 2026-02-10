@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
 
         console.log(`[API] Triggering FastAPI job for file ${inputFilePath}`);
 
-        // Proxy to FastAPI Backend - Use environment variable
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        // Proxy to FastAPI Backend - Use private server-side environment variable
+        // BACKEND_URL is server-only and not exposed to client bundle
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
         const fastapiResponse = await fetch(`${backendUrl}/separate`, {
             method: 'POST',
             headers: {

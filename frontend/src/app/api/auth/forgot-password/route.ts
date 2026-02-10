@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 const forgotPasswordSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -59,12 +60,13 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // TODO: Send email with reset link
-        // const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
-        // await sendPasswordResetEmail(email, user.name || 'User', resetUrl);
-
-        console.log(`Password reset token for ${email}: ${token}`);
-        console.log(`Reset URL: ${process.env.NEXTAUTH_URL}/reset-password?token=${token}`);
+        // Send email with reset link (best-effort; do not fail request on email error)
+        const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+        try {
+            await sendPasswordResetEmail(email, user.name || 'User', resetUrl);
+        } catch (emailError) {
+            console.error('Password reset email failed:', emailError);
+        }
 
         return NextResponse.json(
             { message: 'If an account exists, a password reset link has been sent.' },

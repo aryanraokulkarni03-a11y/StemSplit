@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contactSchema } from '@/lib/validations';
 import { checkRateLimit, getClientIp, RateLimits } from '@/lib/rate-limit';
+import { sendContactNotification } from '@/lib/email';
 
 /**
  * Contact Form API Route
@@ -11,7 +12,7 @@ import { checkRateLimit, getClientIp, RateLimits } from '@/lib/rate-limit';
  * Features:
  * - Zod validation
  * - Rate limiting (30 requests per hour per IP)
- * - Email to admin (TODO: implement with email service)
+ * - Email to admin
  * - Audit logging (TODO: implement)
  */
 export async function POST(request: NextRequest) {
@@ -42,13 +43,17 @@ export async function POST(request: NextRequest) {
         // Validate input
         const validatedData = contactSchema.parse(body);
 
-        // TODO: Send email to admin
-        // await sendContactNotification({
-        //   name: validatedData.name,
-        //   email: validatedData.email,
-        //   subject: validatedData.subject,
-        //   message: validatedData.message,
-        // });
+        // Send email to admin (best-effort; do not fail request on email error)
+        try {
+            await sendContactNotification({
+                name: validatedData.name,
+                email: validatedData.email,
+                subject: validatedData.subject,
+                message: validatedData.message,
+            });
+        } catch (emailError) {
+            console.error('Contact notification email failed:', emailError);
+        }
 
         // TODO: Log in audit table
         // await prisma.auditLog.create({

@@ -16,14 +16,21 @@ export async function GET(
         const { auth } = await import('@clerk/nextjs/server');
         const { getToken } = await auth();
         token = await getToken();
+
+        // If Clerk is configured but the user is unauthenticated,
+        // fail fast instead of sending "Bearer null" downstream.
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
     } else {
         // Dev mode - use a placeholder token
         token = 'dev_token_no_auth';
     }
 
     try {
-        // Fetch status from the Python microservice - Use environment variable
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        // Fetch status from the Python microservice - Use private server-side env var
+        // BACKEND_URL is server-only and not exposed to client bundle
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
         const fastapiResponse = await fetch(`${backendUrl}/status/${jobId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -50,3 +57,4 @@ export async function GET(
         return NextResponse.json({ error: 'Failed to check status' }, { status: 500 });
     }
 }
+

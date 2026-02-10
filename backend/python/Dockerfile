@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy backend requirements first for better caching
+COPY backend/python/requirements.txt ./requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# Copy only the backend application code
+COPY backend/python/. .
 
 # Expose the port (Railway will override this with the PORT env var)
 EXPOSE 8000

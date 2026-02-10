@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { demoRequestSchema } from '@/lib/validations';
 import { checkRateLimit, getClientIp, RateLimits } from '@/lib/rate-limit';
+import { sendDemoConfirmationEmail } from '@/lib/email';
 
 /**
  * Demo Request API Route
@@ -13,7 +14,7 @@ import { checkRateLimit, getClientIp, RateLimits } from '@/lib/rate-limit';
  * - Zod validation
  * - Rate limiting (10 requests per hour per IP)
  * - Save to database
- * - Email confirmation (TODO: implement with email service)
+ * - Email confirmation
  */
 export async function POST(request: NextRequest) {
     try {
@@ -71,8 +72,12 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // TODO: Send confirmation email
-        // await sendDemoConfirmationEmail(demoRequest.email, demoRequest.name);
+        // Send confirmation email (best-effort; do not fail request on email error)
+        try {
+            await sendDemoConfirmationEmail(demoRequest.email, demoRequest.name);
+        } catch (emailError) {
+            console.error('Demo confirmation email failed:', emailError);
+        }
 
         return NextResponse.json(
             {

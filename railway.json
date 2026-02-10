@@ -5,7 +5,7 @@
         "dockerfilePath": "backend/python/Dockerfile"
     },
     "deploy": {
-        "startCommand": "python backend/python/main.py",
+        "startCommand": "python main.py",
         "restartPolicyType": "ON_FAILURE",
         "healthcheckPath": "/health"
     }
