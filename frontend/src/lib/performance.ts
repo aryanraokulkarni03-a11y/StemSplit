@@ -96,10 +96,10 @@ export function reportWebVitals(metric: WebVitalsMetric) {
     if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', metric.name, {
             value: Math.round(metric.value),
-            metric_id: metric.id,
-            metric_value: metric.value,
-            metric_delta: metric.delta,
-            metric_rating: metric.rating,
+            ...(metric.id && { metric_id: metric.id }),
+            ...(metric.value !== undefined && { metric_value: metric.value }),
+            ...(metric.delta !== undefined && { metric_delta: metric.delta }),
+            ...(metric.rating && { metric_rating: metric.rating }),
         });
     }
 

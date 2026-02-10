@@ -74,7 +74,9 @@ class AudioEngine {
         this.sourceNode = this.audioContext.createBufferSource();
         this.sourceNode.buffer = this.audioBuffer;
         this.sourceNode.playbackRate.value = this.playbackRate;
-        this.sourceNode.connect(this.gainNode!);
+        if (this.gainNode) {
+            this.sourceNode.connect(this.gainNode);
+        }
 
         const offset = this.pauseTime;
         this.sourceNode.start(0, offset);

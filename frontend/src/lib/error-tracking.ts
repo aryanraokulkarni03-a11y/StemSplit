@@ -72,7 +72,7 @@ function sendToAnalytics(
         window.gtag('event', 'exception', {
             description: error.message,
             fatal: severity === ErrorSeverity.FATAL,
-            ...context?.extra,
+            ...(context?.extra && { ...context.extra }),
         });
     }
 }

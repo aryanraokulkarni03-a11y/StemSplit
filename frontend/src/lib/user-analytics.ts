@@ -178,7 +178,7 @@ export function trackClicks(selector: string, eventName: string) {
         if (target.matches(selector)) {
             trackUserAction(eventName, {
                 element: target.tagName,
-                text: target.textContent?.substring(0, 50),
+                text: target.textContent?.substring(0, 50) || '',
                 href: target.getAttribute('href'),
             });
         }

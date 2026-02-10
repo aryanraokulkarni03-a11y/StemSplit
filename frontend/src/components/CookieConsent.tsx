@@ -30,9 +30,9 @@ export function CookieConsent() {
         localStorage.setItem('cookie-consent', 'accepted');
         setShowBanner(false);
 
-        // Enable analytics
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('consent', 'update', {
+// Enable analytics
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('consent' as any, 'update', {
                 analytics_storage: 'granted',
             });
         }
@@ -42,9 +42,9 @@ export function CookieConsent() {
         localStorage.setItem('cookie-consent', 'rejected');
         setShowBanner(false);
 
-        // Disable analytics
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('consent', 'update', {
+// Disable analytics
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('consent' as any, 'update', {
                 analytics_storage: 'denied',
             });
         }
