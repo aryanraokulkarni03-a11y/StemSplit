@@ -5,6 +5,14 @@
 
 import * as Tone from 'tone';
 
+// Type definition for webkitAudioContext
+declare global {
+    interface Window {
+        AudioContext: typeof AudioContext;
+        webkitAudioContext?: typeof AudioContext;
+    }
+}
+
 export interface AudioEngineConfig {
     sampleRate?: number;
     bufferSize?: number;
@@ -23,7 +31,7 @@ class AudioEngine {
 
     constructor(config?: AudioEngineConfig) {
         if (typeof window !== 'undefined') {
-            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: config?.sampleRate || 44100,
             });
             this.analyser = this.audioContext.createAnalyser();

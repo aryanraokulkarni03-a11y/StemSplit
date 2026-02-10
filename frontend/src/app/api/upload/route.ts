@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
         const safeName = `${nameWithoutExt}${ext}`;
 
         // Validate file type
-        const isValidType = FILE_CONSTRAINTS.acceptedTypes.includes(file.type) ||
-            FILE_CONSTRAINTS.acceptedExtensions.some(ext =>
+        const isValidType = (FILE_CONSTRAINTS.acceptedTypes as readonly string[]).includes(file.type) ||
+            (FILE_CONSTRAINTS.acceptedExtensions as readonly string[]).some(ext =>
                 file.name.toLowerCase().endsWith(ext)
             );
 

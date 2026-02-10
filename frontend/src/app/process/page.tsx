@@ -189,10 +189,11 @@ export default function ProcessPage() {
               );
 
               loadedStems.forEach((stem) => {
+                const config = STEM_CONFIG[stem.name as keyof typeof STEM_CONFIG];
                 results.push({
                   name: stem.name as StemResult["name"],
-                  label: STEM_CONFIG[stem.name].label,
-                  color: STEM_CONFIG[stem.name].color,
+                  label: config?.label || stem.name,
+                  color: config?.color || '#808080',
                   audioBuffer: stem.audioBuffer,
                   url: stem.url,
                   blob: audioBufferToWav(stem.audioBuffer),

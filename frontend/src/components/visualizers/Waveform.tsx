@@ -3,6 +3,13 @@
 import { useEffect, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 
+// Type definition for global window
+declare global {
+    interface Window {
+        __wavesurfer?: WaveSurfer | null;
+    }
+}
+
 export interface WaveformProps {
     audioSrc: string;
     waveColor?: string;
@@ -76,7 +83,7 @@ export function Waveform({
     useEffect(() => {
         if (wavesurferRef.current) {
             // Store reference globally for AudioPlayer integration
-            (window as any).__wavesurfer = wavesurferRef.current;
+            window.__wavesurfer = wavesurferRef.current;
         }
     }, []);
 

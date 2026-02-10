@@ -115,11 +115,22 @@ export function checkRateLimit(
  * @returns IP address or 'unknown'
  */
 export function getClientIp(headers: Headers): string {
-    return (
-        headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-        headers.get('x-real-ip') ||
-        'unknown'
-    );
+    const forwardedFor = headers.get('x-forwarded-for');
+    if (forwardedFor) {
+        const ips = forwardedFor.split(',');
+        if (ips.length > 0 && ips[0]) {
+            const ip = ips[0].trim();
+            if (ip) return ip;
+        }
+    }
+    
+    const realIp = headers.get('x-real-ip');
+    if (realIp) {
+        const trimmedIp = realIp.trim();
+        if (trimmedIp) return trimmedIp;
+    }
+    
+    return 'unknown';
 }
 
 /**

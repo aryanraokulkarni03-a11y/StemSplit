@@ -41,22 +41,26 @@ export function WaveformVisualizer({
                     return;
                 }
 
-                setDuration(audioBuffer.duration);
+                // Guard against invalid duration values
+                const dur = Number.isFinite(audioBuffer.duration) ? audioBuffer.duration : 0;
+                setDuration(dur);
                 // Close context after decoding to free up resources
                 await audioContext.close();
 
                 // Get channel data and downsample for visualization
                 const channelData = audioBuffer.getChannelData(0);
-                const samples = 200; // Number of bars to display
+                const samples = Math.max(200, Math.floor(channelData.length / 200) || 1); // Number of bars to display
                 const blockSize = Math.floor(channelData.length / samples);
                 const filteredData: number[] = [];
 
                 for (let i = 0; i < samples; i++) {
                     let sum = 0;
                     for (let j = 0; j < blockSize; j++) {
-                        sum += Math.abs(channelData[i * blockSize + j]);
+                        const idx = i * blockSize + j;
+                        const val = channelData[idx];
+                        sum += Math.abs(val ?? 0);
                     }
-                    filteredData.push(sum / blockSize);
+                    filteredData.push(sum / (blockSize || 1));
                 }
 
                 // Normalize
@@ -95,7 +99,12 @@ export function WaveformVisualizer({
 
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
-
+        if (!rect) {
+            canvas.width = 800;
+            canvas.height = 80;
+            return;
+        }
+        
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
@@ -105,7 +114,10 @@ export function WaveformVisualizer({
 
         const barWidth = rect.width / waveformData.length;
         const barGap = 1;
-        const progress = duration > 0 ? currentTime / duration : 0;
+        // Guard against NaN/undefined values for currentTime and duration
+        const safeCurrentTime = Number.isFinite(currentTime) ? currentTime : 0;
+        const safeDuration = Number.isFinite(duration) ? duration : 0;
+        const progress = safeDuration > 0 ? safeCurrentTime / safeDuration : 0;
         const progressX = progress * rect.width;
 
         waveformData.forEach((value, index) => {

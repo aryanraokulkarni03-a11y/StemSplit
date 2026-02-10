@@ -8,6 +8,8 @@
 // Google Analytics Measurement ID
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '';
 
+// gtag typings are centralized in frontend/src/types/gtag.d.ts
+
 /**
  * Check if Google Analytics is enabled
  */
@@ -21,7 +23,7 @@ export const isGAEnabled = (): boolean => {
 export const pageview = (url: string) => {
     if (!isGAEnabled()) return;
 
-    (window as any).gtag('config', GA_MEASUREMENT_ID, {
+    window.gtag('config', GA_MEASUREMENT_ID, {
         page_path: url,
     });
 };
@@ -39,20 +41,28 @@ export interface GAEvent {
 export const event = ({ action, category, label, value }: GAEvent) => {
     if (!isGAEnabled()) return;
 
-    (window as any).gtag('event', action, {
+    const eventParams: Record<string, string | number> = {
         event_category: category,
-        event_label: label,
-        value: value,
-    });
+    };
+
+    if (label !== undefined) {
+        eventParams.event_label = label;
+    }
+
+    if (value !== undefined) {
+        eventParams.value = value;
+    }
+
+    window.gtag?.('event', action, eventParams);
 };
 
 /**
  * User properties
  */
-export const setUserProperties = (properties: Record<string, any>) => {
+export const setUserProperties = (properties: Record<string, string | number | boolean>) => {
     if (!isGAEnabled()) return;
 
-    (window as any).gtag('set', 'user_properties', properties);
+    window.gtag('set', 'user_properties', properties);
 };
 
 /**
@@ -155,14 +165,23 @@ export const GAEvents = {
     },
 } as const;
 
+// E-commerce item type
+interface EcommerceItem {
+    item_id: string;
+    item_name: string;
+    category?: string;
+    quantity?: number;
+    price?: number;
+}
+
 /**
  * E-commerce tracking (for future use)
  */
 export const ecommerce = {
-    purchase: (transactionId: string, value: number, items: any[]) => {
+    purchase: (transactionId: string, value: number, items: EcommerceItem[]) => {
         if (!isGAEnabled()) return;
 
-        (window as any).gtag('event', 'purchase', {
+        window.gtag('event', 'purchase', {
             transaction_id: transactionId,
             value: value,
             currency: 'USD',
@@ -170,10 +189,10 @@ export const ecommerce = {
         });
     },
 
-    addToCart: (item: any) => {
+    addToCart: (item: EcommerceItem) => {
         if (!isGAEnabled()) return;
 
-        (window as any).gtag('event', 'add_to_cart', {
+        window.gtag('event', 'add_to_cart', {
             items: [item],
         });
     },

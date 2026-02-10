@@ -13,16 +13,12 @@ from pathlib import Path
 from processor import AudioProcessor
 import shutil
 import base64
-import jwt
 from datetime import datetime
 from dotenv import load_dotenv
 
 # Database imports
 from database.config import init_database, get_db_session
 from database.repositories import JobRepository, JobMetricRepository, UserQuotaRepository
-
-# Load environment variables
-load_dotenv()
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -78,46 +74,50 @@ NEXTAUTH_URL = os.getenv("NEXTAUTH_URL", "http://localhost:3000")
 security = HTTPBearer()
 
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verifies the NextAuth token."""
+    """Verifies a NextAuth token.
+
+    - Removed brittle inline dev bypass
+    - Requires NEXTAUTH_SECRET to be configured
+    - Accepts either a standard JWT (HS256) or a base64url-encoded payload
+      with a required "sub" field.
+    """
     token = credentials.credentials
 
-    # Dev mode bypass - accept dev token from frontend (development only)
-    if DEBUG and (token == "dev_token_no_auth" or token == "dev_token"):
-        print("[Auth] Dev mode token accepted")
-        return {"sub": "dev_user", "email": "dev@example.com"}
+    # Enforce secret gating in all environments
+    if not NEXTAUTH_SECRET:
+        raise HTTPException(status_code=401, detail="NEXTAUTH_SECRET not configured")
 
+    # Helper to decode a base64url-encoded JSON payload
+    def _decode_base64url_payload(tkn: str) -> dict:
+        # Pad to a multiple of 4
+        padding = '=' * (-len(tkn) % 4)
+        decoded = base64.urlsafe_b64decode(tkn + padding)
+        return json.loads(decoded.decode('utf-8'))
+
+    # JWT path (three parts separated by '.')
+    if token.count('.') >= 2:
+        try:
+            payload = jwt.decode(
+                token,
+                NEXTAUTH_SECRET,
+                algorithms=["HS256"]
+            )
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
+        if not payload.get("sub"):
+            raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
+        return payload
+
+    # Base64 URL-encoded payload path
     try:
-        # Handle simple base64 encoded token (from our /api/auth/token endpoint)
-        if token.startswith('eyJ'):
-            # This is a JWT
-            if NEXTAUTH_SECRET:
-                payload = jwt.decode(
-                    token,
-                    NEXTAUTH_SECRET,
-                    algorithms=["HS256"]
-                )
-                if not payload.get("sub"):
-                    raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
-                return payload
-            else:
-                raise HTTPException(status_code=401, detail="NEXTAUTH_SECRET not configured")
-        else:
-            # This is our base64 encoded token
-            try:
-                decoded_bytes = base64.b64decode(token)
-                payload = json.loads(decoded_bytes.decode('utf-8'))
-                if not payload.get("sub"):
-                    raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
-                return payload
-            except Exception as e:
-                raise HTTPException(status_code=401, detail=f"Invalid token format: {str(e)}")
-                
+        payload = _decode_base64url_payload(token)
+        if not payload.get("sub"):
+            raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
+        return payload
+    except HTTPException:
+        raise
     except Exception as e:
-        # Fallback for development if no secret is provided yet
-        if DEBUG and not NEXTAUTH_SECRET:
-            print(f"[Auth] No NEXTAUTH_SECRET provided, allowing dev mode")
-            return {"sub": "dev_user", "email": "dev@example.com"}
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Invalid token format: {e}")
 
 
 # In-memory job repository (for demo purposes) + simple persistent store

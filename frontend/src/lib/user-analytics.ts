@@ -5,6 +5,13 @@
  * Privacy-compliant user analytics
  */
 
+// Type definition for window globals
+declare global {
+    interface Window {
+        gtag?: (command: string, eventName: string, params?: Record<string, any>) => void;
+    }
+}
+
 /**
  * User session tracking
  */
@@ -49,8 +56,8 @@ export function trackPageView(url: string) {
     };
 
     // Send to analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'page_view', {
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'page_view', {
             page_path: url,
             session_id: sessionId,
         });
@@ -68,13 +75,13 @@ export function trackPageView(url: string) {
  */
 export function trackUserAction(
     action: string,
-    properties?: Record<string, any>
+    properties?: Record<string, string | number | boolean>
 ) {
     const sessionId = getSessionId();
 
     // Send to analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', action, {
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', action, {
             ...properties,
             session_id: sessionId,
         });
@@ -98,8 +105,8 @@ export function trackTimeOnPage() {
     const sendTimeOnPage = () => {
         const timeOnPage = Math.round((Date.now() - startTime) / 1000); // seconds
 
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('event', 'time_on_page', {
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'time_on_page', {
                 value: timeOnPage,
                 page_path: window.location.pathname,
             });
@@ -142,8 +149,8 @@ export function trackScrollDepth() {
             if (scrollPercent >= milestone && !reached.has(milestone)) {
                 reached.add(milestone);
 
-                if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'scroll_depth', {
+                if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'scroll_depth', {
                         value: milestone,
                         page_path: window.location.pathname,
                     });
@@ -217,14 +224,19 @@ export function calculateEngagementScore(): number {
 
     if (!session) return 0;
 
-    const data = JSON.parse(session);
+    try {
+        const data = JSON.parse(session);
 
-    // Simple engagement score calculation
-    // Adjust weights as needed
-    const score =
-        (data.pageViews || 0) * 10 +
-        (data.events?.length || 0) * 5 +
-        Math.min((data.lastActivity - data.startTime) / 60000, 10) * 2; // time in minutes, capped at 10
+        // Simple engagement score calculation
+        // Adjust weights as needed
+        const score =
+            (data.pageViews || 0) * 10 +
+            (data.events?.length || 0) * 5 +
+            Math.min((data.lastActivity - data.startTime) / 60000, 10) * 2; // time in minutes, capped at 10
 
-    return Math.round(score);
+        return Math.round(score);
+    } catch (error) {
+        console.error('Failed to parse session data for engagement calculation:', error);
+        return 0;
+    }
 }
