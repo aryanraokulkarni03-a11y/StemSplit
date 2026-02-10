@@ -11,7 +11,7 @@ const outfit = Outfit({
   variable: '--font-outfit',
 });
 
-export const metadata: Metadata = defaultMetadata;
+export const metadata: Metadata = defaultMetadata();
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   return (
