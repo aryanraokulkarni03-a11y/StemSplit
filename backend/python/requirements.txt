@@ -2,6 +2,11 @@ fastapi
 uvicorn
 pydantic
 
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
 # Use CPU-only PyTorch wheels to keep image size below Railway's 4GB limit.
 # The extra index points to the official CPU wheel repo.
 --extra-index-url https://download.pytorch.org/whl/cpu

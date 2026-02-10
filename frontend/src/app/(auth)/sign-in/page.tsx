@@ -20,10 +20,10 @@ function SignInContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const rawCallback = searchParams.get('callbackUrl');
-    const callbackUrl = typeof rawCallback === 'string' ? rawCallback : '';
+    // Properly handle null and empty string cases during prerendering
     const validCallbackUrl =
-        callbackUrl && callbackUrl.startsWith('/')
-            ? callbackUrl
+        rawCallback && typeof rawCallback === 'string' && rawCallback.startsWith('/')
+            ? rawCallback
             : '/dashboard';
 
     const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +57,7 @@ function SignInContent() {
             router.push(validCallbackUrl);
             router.refresh();
         } catch (err) {
+            console.error('Sign in error:', err);
             setError('An error occurred. Please try again.');
         } finally {
             setIsLoading(false);
@@ -64,8 +65,14 @@ function SignInContent() {
     };
 
     const handleOAuthSignIn = async (provider: 'google' | 'github') => {
-        setIsLoading(true);
-        await signIn(provider, { callbackUrl: validCallbackUrl });
+        try {
+            setIsLoading(true);
+            await signIn(provider, { callbackUrl: validCallbackUrl });
+        } catch (err) {
+            console.error('OAuth sign in error:', err);
+            setError('Authentication failed. Please try again.');
+            setIsLoading(false);
+        }
     };
 
     return (

@@ -99,7 +99,7 @@ export default function HomePage() {
                   {isUploading ? 'Preparing Engine...' : 'Start Processing'}
                 </Button>
                 <p className="text-sm text-foreground/50 mt-4">
-                  Processing happens in your browser • Your files never leave your device
+                  AI-powered processing on our servers • Your files are encrypted and secure
                 </p>
               </div>
             )}
@@ -131,9 +131,9 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
                 <Shield className="w-7 h-7 text-emerald-500" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">100% Private</h3>
+              <h3 className="text-xl font-semibold mb-3">Secure & Private</h3>
               <p className="text-foreground/60">
-                All processing happens in your browser. Your audio files never leave your device.
+                Files are processed on our secure servers with enterprise-grade encryption and automatic cleanup.
               </p>
             </div>
 

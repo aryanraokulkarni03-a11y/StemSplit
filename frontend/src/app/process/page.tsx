@@ -238,8 +238,8 @@ export default function ProcessPage() {
         <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-leather" data-testid="process-page-container">
             <div className="w-full max-w-2xl relative z-10">
 
-                {/* Rack Mount Header */}
-                <div className="bg-metal-dark p-6 rounded-t-lg border-x border-t border-[#45362C] shadow-2xl relative overflow-hidden">
+{/* Rack Mount Header */}
+                <div className="bg-metal-dark p-4 sm:p-6 rounded-t-lg border-x border-t border-[#45362C] shadow-2xl relative overflow-hidden">
                     {/* Screws */}
                     <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
                     <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
@@ -249,7 +249,7 @@ export default function ProcessPage() {
                             <div className={`w-2 h-2 rounded-full ${status.stage === 'error' ? 'bg-red-500' : 'bg-green-500'} led-glow animate-pulse`} />
                             <span className="font-mono text-xs text-[#A8977A] tracking-[0.2em] uppercase">Processing Unit Active</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-[#F2E8DC] font-outfit uppercase tracking-tight">
+<h1 className="text-2xl sm:text-3xl font-bold text-[#F2E8DC] font-outfit uppercase tracking-tight">
                             signal separation
                         </h1>
                     </div>
@@ -258,7 +258,7 @@ export default function ProcessPage() {
                 {/* Rack Units (Stems) */}
                 <div className="bg-[#161711] border-x border-[#45362C]">
                     {error ? (
-                        <div className="p-12 text-center bg-red-900/20">
+                        <div className="p-6 sm:p-12 text-center bg-red-900/20">
                             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                             <p className="text-red-400 font-mono mb-6">{error}</p>
                             <button onClick={handleRetry} className="btn-tactile px-6 py-2 text-[#161711] font-bold rounded-sm">RETRY SEQUENCE</button>
@@ -276,16 +276,16 @@ export default function ProcessPage() {
                                 else if (isActive) rotation = -10 + (Math.random() * 20) + (status.progress / 3); // Simulated movement
 
                                 return (
-                                    <div key={key} className="rack-unit p-6 flex items-center justify-between group relative">
+                                    <div key={key} className="rack-unit p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 group relative">
                                         {/* Screw details */}
                                         <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-black/50" />
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-black/50" />
 
-                                        <div className="flex items-center gap-6 pl-6">
-                                            {/* Channel Label */}
-                                            <div className="w-24">
+                                        <div className="flex items-center gap-4 sm:gap-6 pl-4 sm:pl-6">
+{/* Channel Label */}
+                                            <div className="w-20 sm:w-24">
                                                 <span className="block text-xs text-[#A8977A]/60 font-mono uppercase tracking-widest mb-1">Channel</span>
-                                                <h3 className="text-xl font-bold text-[#F2E8DC] uppercase">{config.label}</h3>
+                                                <h3 className="text-lg sm:text-xl font-bold text-[#F2E8DC] uppercase">{config.label}</h3>
                                             </div>
 
                                             {/* Status LED */}

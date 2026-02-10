@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Upload, X, AlertCircle } from 'lucide-react';
-import { AudioFile, FILE_CONSTRAINTS } from '@/types/audio';
+import { AudioFile } from '@/types/audio';
+import { fetchUploadConstraints, validateFile, type UploadConstraints } from '@/lib/upload-constraints';
 
 interface FileUploadProps {
     onFileSelect: (file: AudioFile) => void;
@@ -13,22 +14,24 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<AudioFile | null>(null);
+    const [constraints, setConstraints] = useState<UploadConstraints | null>(null);
+    const [constraintsError, setConstraintsError] = useState<string | null>(null);
 
-    const validateFile = useCallback((file: File): string | null => {
-        // Check file type
-        const isValidType = FILE_CONSTRAINTS.acceptedTypes.includes(file.type) ||
-            FILE_CONSTRAINTS.acceptedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
-
-        if (!isValidType) {
-            return 'Only MP3 or WAV files supported';
-        }
-
-        // Check file size
-        if (file.size > FILE_CONSTRAINTS.maxSize) {
-            return `Max file size is ${FILE_CONSTRAINTS.maxSize / (1024 * 1024)}MB`;
-        }
-
-        return null;
+    // Fetch constraints on component mount
+    useEffect(() => {
+        fetchUploadConstraints()
+            .then(setConstraints)
+            .catch(error => {
+                console.error('Failed to fetch upload constraints:', error);
+                setConstraintsError('Could not load upload limits');
+                // Fallback to default constraints
+                setConstraints({
+                    maxFileSize: 25 * 1024 * 1024,
+                    maxFileSizeMB: 25,
+                    acceptedTypes: ['audio/mpeg', 'audio/wav', 'audio/mp3'],
+                    acceptedExtensions: ['.mp3', '.wav'],
+                });
+            });
     }, []);
 
     const getAudioDuration = (file: File): Promise<number> => {
@@ -60,10 +63,15 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
         });
     };
 
-    const handleFile = useCallback(async (file: File) => {
+const handleFile = useCallback(async (file: File) => {
         setError(null);
 
-        const validationError = validateFile(file);
+        if (!constraints) {
+            setError('Loading upload limits...');
+            return;
+        }
+
+        const validationError = validateFile(file, constraints);
         if (validationError) {
             setError(validationError);
             return;
@@ -85,7 +93,7 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
         } catch {
             setError('Could not read audio file. Please try another file.');
         }
-    }, [validateFile, onFileSelect]);
+    }, [constraints, validateFile, onFileSelect]);
 
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -137,10 +145,38 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
 
     // formatFileSize and formatDuration removed as they were unused
 
+// Show constraints error if any
+    if (constraintsError) {
+        return (
+            <div className="w-full max-w-2xl mx-auto font-outfit">
+                <div className="mt-6 p-4 bg-[#8B3A3A] text-white flex items-center gap-3 border border-[#45362C] shadow-lg">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <p className="text-sm font-bold uppercase tracking-wide">{constraintsError}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show loading state while fetching constraints
+    if (!constraints) {
+        return (
+            <div className="w-full max-w-2xl mx-auto font-outfit perspective-1000">
+                <div className="relative bg-metal-dark p-8 rounded-sm shadow-2xl border-t border-white/10 border-b border-black/50">
+                    <div className="flex items-center justify-center py-16">
+                        <div className="text-center">
+                            <div className="w-8 h-8 border-2 border-[#A8977A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-[#F2E8DC] font-mono text-sm">Loading upload limits...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full max-w-2xl mx-auto font-outfit perspective-1000">
+        <div className="w-full max-w-2xl mx-auto font-outfit perspective-1000 px-4 sm:px-0">
             {/* Tape Deck Chassis */}
-            <div className="relative bg-metal-dark p-8 rounded-sm shadow-2xl border-t border-white/10 border-b border-black/50">
+            <div className="relative bg-metal-dark p-4 sm:p-8 rounded-sm shadow-2xl border-t border-white/10 border-b border-black/50">
 
                 {/* Screw Heads */}
                 <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
@@ -158,35 +194,35 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
                         ${isDragging ? 'shadow-[0_0_15px_#A8977A] border-[#A8977A]/50' : ''}
                         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
-                    style={{ minHeight: '200px' }}
+                    style={{ minHeight: '180px' }}
                 >
-                    {/* Content Container */}
-                    <div className="relative h-full flex flex-col items-center justify-center text-center p-8">
+{/* Content Container */}
+                    <div className="relative h-full flex flex-col items-center justify-center text-center p-4 sm:p-8">
 
                         {selectedFile ? (
                             /* Cassette Tape Visual */
                             <div className="w-full animate-in slide-in-from-top duration-500 ease-out">
-                                <div className="bg-[#1C1D18] border-2 border-[#2A2B24] rounded-md p-4 relative shadow-lg">
+                                <div className="bg-[#1C1D18] border-2 border-[#2A2B24] rounded-md p-2 sm:p-4 relative shadow-lg">
                                     {/* Cassette Texture */}
                                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc0JyBoZWlnaHQ9JzQnPgo8cmVjdCB3aWR0aD0nNCcgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20" />
 
-                                    {/* Label Area */}
-                                    <div className="bg-[#F2E8DC] h-24 rounded-sm mb-4 relative overflow-hidden flex items-center justify-center p-4 border border-[#D4C5A9]">
+{/* Label Area */}
+                                        <div className="bg-[#F2E8DC] h-16 sm:h-24 rounded-sm mb-2 sm:mb-4 relative overflow-hidden flex items-center justify-center p-2 sm:p-4 border border-[#D4C5A9]">
                                         {/* Handwriting Font */}
-                                        <p className="font-bold text-2xl text-[#161711] font-mono truncate uppercase tracking-tighter" style={{ fontFamily: '"Courier New", Courier, monospace' }}>
+<p className="font-bold text-sm sm:text-xl lg:text-2xl text-[#161711] font-mono truncate uppercase tracking-tighter" style={{ fontFamily: '"Courier New", Courier, monospace' }}>
                                             {selectedFile.name}
                                         </p>
                                         <div className="absolute top-0 left-0 w-full h-1 bg-red-500/20" />
                                         <div className="absolute bottom-0 left-0 w-full h-1 bg-red-500/20" />
                                     </div>
 
-                                    {/* Spools */}
-                                    <div className="flex justify-center gap-12 px-8">
-                                        <div className="w-12 h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
+{/* Spools */}
+<div className="flex justify-center gap-6 sm:gap-12 px-4 sm:px-8">
+                                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
                                             <div className="w-full h-1 bg-white/20 rotate-0" />
                                             <div className="w-full h-[1px] absolute bg-white/20 rotate-90" />
                                         </div>
-                                        <div className="w-12 h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
+                                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-4 border-white/20 flex items-center justify-center animate-spin-slow">
                                             <div className="w-full h-1 bg-white/20 rotate-0" />
                                             <div className="w-full h-[1px] absolute bg-white/20 rotate-90" />
                                         </div>
@@ -214,9 +250,9 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
                         ) : (
                             /* Empty Slot Prompt */
                             <label className={`block w-full h-full flex flex-col items-center justify-center gap-6 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                                <input
+<input
                                     type="file"
-                                    accept=".mp3,.wav,audio/mpeg,audio/wav"
+                                    accept={constraints.acceptedTypes.join(',') + ',' + constraints.acceptedExtensions.join(',')}
                                     onChange={handleInputChange}
                                     disabled={disabled}
                                     className="sr-only"
@@ -244,8 +280,11 @@ export const FileUpload = React.memo(function FileUpload({ onFileSelect, disable
                                     <h3 className="text-2xl font-bold font-outfit text-[#F2E8DC] uppercase tracking-wide group-hover:text-[#A8977A] transition-colors">
                                         {isDragging ? 'Insert Tape' : 'Load Audio'}
                                     </h3>
-                                    <p className="text-[#8F7D60] font-mono text-xs uppercase tracking-widest">
-                                        MP3 / WAV • Max 25MB
+<p className="text-[#8F7D60] font-mono text-xs uppercase tracking-widest">
+                                        {constraints 
+                                            ? `${constraints.acceptedExtensions.map(ext => ext.substring(1).toUpperCase()).join(' / ')} • Max ${constraints.maxFileSizeMB}MB`
+                                            : 'Loading limits...'
+                                        }
                                     </p>
                                 </div>
                             </label>

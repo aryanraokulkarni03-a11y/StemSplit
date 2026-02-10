@@ -93,17 +93,50 @@ export async function POST(request: NextRequest) {
 
 // GET /api/upload - Return upload constraints
 export async function GET() {
-    return NextResponse.json({
-        constraints: {
-            maxSize: FILE_CONSTRAINTS.maxSize,
-            maxSizeFormatted: `${FILE_CONSTRAINTS.maxSize / (1024 * 1024)}MB`,
-            acceptedTypes: FILE_CONSTRAINTS.acceptedTypes,
-            acceptedExtensions: FILE_CONSTRAINTS.acceptedExtensions,
-        },
-        endpoints: {
-            upload: 'POST /api/upload',
-            separate: 'POST /api/separate',
-            health: 'GET /api/health',
+    try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+        if (!backendUrl) {
+            throw new Error('Backend URL not configured');
         }
-    });
+
+        const response = await fetch(`${backendUrl}/upload/constraints`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch constraints from backend');
+        }
+
+        const constraints = await response.json();
+
+        return NextResponse.json({
+            constraints: {
+                maxSize: constraints.maxFileSize,
+                maxSizeFormatted: `${constraints.maxFileSizeMB}MB`,
+                acceptedTypes: constraints.acceptedTypes,
+                acceptedExtensions: constraints.acceptedExtensions,
+            },
+            endpoints: {
+                upload: 'POST /api/upload',
+                separate: 'POST /api/separate',
+                health: 'GET /api/health',
+                backendConstraints: 'GET /upload/constraints',
+            }
+        });
+    } catch (error) {
+        console.error('Failed to fetch backend constraints:', error);
+        
+        // Fallback to frontend constraints
+        return NextResponse.json({
+            constraints: {
+                maxSize: FILE_CONSTRAINTS.maxSize,
+                maxSizeFormatted: `${FILE_CONSTRAINTS.maxSize / (1024 * 1024)}MB`,
+                acceptedTypes: FILE_CONSTRAINTS.acceptedTypes,
+                acceptedExtensions: FILE_CONSTRAINTS.acceptedExtensions,
+            },
+            endpoints: {
+                upload: 'POST /api/upload',
+                separate: 'POST /api/separate',
+                health: 'GET /api/health',
+                backendConstraints: 'GET /upload/constraints',
+            }
+        });
+    }
 }

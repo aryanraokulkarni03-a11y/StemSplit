@@ -13,6 +13,10 @@ from pathlib import Path
 from processor import AudioProcessor
 import shutil
 
+# Database imports
+from database.config import init_database, get_db_session
+from database.repositories import JobRepository, JobMetricRepository, UserQuotaRepository
+
 # Environment & configuration
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
@@ -27,7 +31,18 @@ JOB_STORE_DIR.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads")).resolve()
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+# Maximum file size configuration
+MAX_FILE_SIZE_MB = int(os.getenv("MAX_FILE_SIZE_MB", "25"))
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
 app = FastAPI(title="Singscape AI Engine", version="1.0.0")
+
+# Initialize database on startup
+@app.on_event("startup")
+def startup_event():
+    """Initialize database and perform startup tasks"""
+    init_database()
+    print("[Backend] Database initialized successfully")
 
 # Enable CORS for Next.js frontend
 cors_origins = ALLOWED_ORIGINS or (["*"] if DEBUG else [])
@@ -153,11 +168,33 @@ def cleanup_old_jobs(max_age_seconds: int = 7 * 24 * 60 * 60) -> None:
     except Exception as e:
         print(f"[Jobs] Cleanup sweep failed: {e}")
 
+def get_queue_info():
+    """Return queue position and estimated wait time."""
+    db = get_db_session()
+    
+    try:
+        job_repo = JobRepository(db)
+        return job_repo.get_queue_info()
+    finally:
+        db.close()
+
 class SeparationRequest(BaseModel):
     input_path: str
     output_dir: str
     stems: int = 2
 
+
+@app.get("/upload/constraints")
+async def get_upload_constraints():
+    """
+    Returns upload constraints for the frontend UI.
+    """
+    return {
+        "maxFileSize": MAX_FILE_SIZE_BYTES,
+        "maxFileSizeMB": MAX_FILE_SIZE_MB,
+        "acceptedTypes": ["audio/mpeg", "audio/wav", "audio/mp3"],
+        "acceptedExtensions": [".mp3", ".wav"],
+    }
 
 @app.post("/upload")
 async def upload_file(
@@ -170,17 +207,36 @@ async def upload_file(
     Returns a fileName and inputPath that can be used by /separate.
     """
     try:
+        # Validate file size
+        if file.size and file.size > MAX_FILE_SIZE_BYTES:
+            raise HTTPException(
+                status_code=413, 
+                detail=f"File size {file.size / 1024 / 1024:.1f}MB exceeds maximum allowed size of {MAX_FILE_SIZE_MB}MB"
+            )
+        
         raw_name = file.filename or "audio"
         safe_name = raw_name.replace(" ", "_")
         dest_path = UPLOAD_DIR / safe_name
 
+        # Write file with size tracking
+        bytes_written = 0
         with dest_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            while chunk := file.file.read(8192):
+                bytes_written += len(chunk)
+                if bytes_written > MAX_FILE_SIZE_BYTES:
+                    dest_path.unlink(missing_ok=True)  # Clean up oversized file
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File size {bytes_written / 1024 / 1024:.1f}MB exceeds maximum allowed size of {MAX_FILE_SIZE_MB}MB"
+                    )
+                buffer.write(chunk)
 
         return {
             "fileName": safe_name,
             "inputPath": str(dest_path),
         }
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         print(f"[Upload] Error saving file: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
@@ -238,34 +294,128 @@ async def start_separation(
     auth: dict = Depends(verify_token)
 ):
     job_id = str(uuid.uuid4())
+    db = get_db_session()
     
-    jobs[job_id] = {
-        "id": job_id,
-        "status": "queued",
-        "progress": 0,
-        "message": "Job added to queue",
-        "user_id": auth.get("sub"),
-        "createdAt": time.time(),
-        "updatedAt": time.time()
-    }
-    save_job(job_id)
-    
-    background_tasks.add_task(
-        run_separation_task, 
-        job_id, 
-        request.input_path, 
-        request.output_dir, 
-        request.stems
-    )
-    
-    return {"job_id": job_id}
+    try:
+        # Get repositories
+        job_repo = JobRepository(db)
+        quota_repo = UserQuotaRepository(db)
+        
+        # Extract file info for quota check
+        user_id = auth.get("sub") or "anonymous"
+        
+        # Check user quota
+        quota_check = quota_repo.check_quota(user_id)
+        if not quota_check["allowed"]:
+            if quota_check["reason"] == "HOURLY_LIMIT":
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Hourly limit exceeded. Maximum {quota_check['limit']} jobs per hour."
+                )
+            elif quota_check["reason"] == "DAILY_LIMIT":
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Daily limit exceeded. Maximum {quota_check['limit']} jobs per day."
+                )
+            elif quota_check["reason"] == "FILE_TOO_LARGE":
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large. Maximum size is {quota_check['limit']}MB."
+                )
+        
+        # Get queue info
+        queue_info = job_repo.get_queue_info()
+        
+        # Create job in database
+        job = job_repo.create_job(
+            job_id=job_id,
+            user_id=user_id,
+            input_path=request.input_path,
+            output_dir=request.output_dir,
+            stems=request.stems
+        )
+        
+        # Update initial status with queue info
+        job_repo.update_job(
+            job_id=job_id,
+            status="queued",
+            message=f"Job added to queue • {queue_info['jobsAhead']} jobs ahead"
+        )
+        
+        # Increment quota usage
+        quota_repo.increment_usage(user_id)
+        
+        # Keep backward compatibility - also store in memory
+        jobs[job_id] = {
+            "id": job_id,
+            "status": "queued",
+            "progress": 0,
+            "message": f"Job added to queue • {queue_info['jobsAhead']} jobs ahead",
+            "user_id": user_id,
+            "createdAt": time.time(),
+            "updatedAt": time.time(),
+            "queue": queue_info
+        }
+        
+        background_tasks.add_task(
+            run_separation_task, 
+            job_id, 
+            request.input_path, 
+            request.output_dir, 
+            request.stems
+        )
+        
+        return {"job_id": job_id}
+        
+    finally:
+        db.close()
 
 @app.get("/status/{job_id}")
 async def get_status(job_id: str, auth: dict = Depends(verify_token)):
-    job = load_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return job
+    db = get_db_session()
+    
+    try:
+        job_repo = JobRepository(db)
+        
+        # Try to get from database first
+        job = job_repo.get_job(job_id)
+        
+        if not job:
+            # Fallback to in-memory store for backward compatibility
+            job_memory = load_job(job_id)
+            if not job_memory:
+                raise HTTPException(status_code=404, detail="Job not found")
+            
+            # Include current queue info for queued jobs
+            if job_memory.get("status") == "queued":
+                job_memory["queue"] = job_repo.get_queue_info()
+            
+            return job_memory
+        
+        # Convert database job to dict format
+        job_dict = {
+            "id": job.id,
+            "status": job.status,
+            "progress": job.progress,
+            "message": job.message,
+            "error": job.error,
+            "user_id": job.user_id,
+            "createdAt": job.created_at.timestamp(),
+            "updatedAt": job.updated_at.timestamp(),
+        }
+        
+        # Add queue info for queued jobs
+        if job.status == "queued":
+            job_dict["queue"] = job_repo.get_queue_info()
+        
+        # Add stem files if completed
+        if job.status == "completed" and job.stem_files:
+            job_dict["stems"] = job.stem_files
+        
+        return job_dict
+        
+    finally:
+        db.close()
 
 @app.get("/health")
 async def health_check():

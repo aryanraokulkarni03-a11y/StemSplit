@@ -98,21 +98,21 @@ export default function ResultsPage() {
     return (
         <div className="min-h-screen py-20 px-4 bg-leather">
             <div className="max-w-6xl mx-auto">
-                {/* Mixing Desk Header */}
-                <div className="text-center mb-16 relative">
-                    <div className="inline-block relative mb-6">
-                        <div className="w-20 h-20 rounded-full bg-metal-brushed border-4 border-[#2A2B24] flex items-center justify-center shadow-xl z-10 relative">
-                            <CheckCircle2 className="w-10 h-10 text-[#45362C]" />
+{/* Mixing Desk Header */}
+                <div className="text-center mb-8 sm:mb-16 relative">
+                    <div className="inline-block relative mb-4 sm:mb-6">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-metal-brushed border-4 border-[#2A2B24] flex items-center justify-center shadow-xl z-10 relative">
+                            <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 text-[#45362C]" />
                         </div>
                         {/* Status light */}
-                        <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-green-500 led-glow animate-pulse" />
+                        <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-green-500 led-glow animate-pulse" />
                     </div>
 
-                    <h1 className="text-4xl sm:text-5xl font-bold font-outfit tracking-tight text-[#F2E8DC] mb-2">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-outfit tracking-tight text-[#F2E8DC] mb-2">
                         Session Complete
                     </h1>
 
-                    <p className="text-lg text-[#A8977A]/80 font-mono tracking-wide">
+                    <p className="text-base sm:text-lg text-[#A8977A]/80 font-mono tracking-wide">
                         {originalFileName ? (
                             <>MASTER TAPE: <span className="text-[#F2E8DC] uppercase">{originalFileName}</span></>
                         ) : (
@@ -121,20 +121,20 @@ export default function ResultsPage() {
                     </p>
                 </div>
 
-                {/* Console Surface */}
-                <div className="bg-metal-dark rounded-xl p-8 border border-[#45362C] shadow-2xl relative">
+{/* Console Surface */}
+                <div className="bg-metal-dark rounded-xl p-4 sm:p-8 border border-[#45362C] shadow-2xl relative">
                     {/* Metal Screws */}
                     <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
                     <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
                     <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
                     <div className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
 
-                    <div className="flex items-center justify-between mb-8 border-b border-black/50 pb-4">
-                        <h2 className="text-xl font-bold font-outfit text-[#A8977A] uppercase tracking-widest flex items-center gap-2">
-                            <Sparkles className="w-5 h-5" />
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8 border-b border-black/50 pb-4">
+                        <h2 className="text-lg sm:text-xl font-bold font-outfit text-[#A8977A] uppercase tracking-widest flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                             Console Strips
                         </h2>
-                        <span className="text-xs font-mono text-zinc-500 bg-black/30 px-2 py-1 rounded">
+                        <span className="text-xs font-mono text-zinc-500 bg-black/30 px-2 py-1 rounded w-fit">
                             {stems.length} CHANNELS ACTIVE
                         </span>
                     </div>
@@ -142,8 +142,8 @@ export default function ResultsPage() {
                     <StemGrid stems={stems} />
                 </div>
 
-                {/* Footer Controls */}
-                <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8">
+{/* Footer Controls */}
+                <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
                     {/* Tactile Buttons */}
                     <button
                         onClick={handleProcessAnother}

@@ -30,10 +30,11 @@ Status legend: ✅ done · 🔄 in progress · ⏳ planned
 - ✅ Separation uses backend paths
   - `/api/separate` accepts optional `inputPath` and forwards it to backend
   - Process page passes `inputPath` into `/api/separate`
-- 🔄 TODO: Large-file experience
-  - [ ] Confirm practical max file size that works reliably in Railway container (CPU + disk)
-  - [ ] Surface max size and duration limits in the upload UI before user selects a file
-  - [ ] Optionally trim or downsample very long tracks (server-side or pre-upload)
+- ✅ Large-file experience
+  - [x] Confirm practical max file size that works reliably in Railway container (CPU + disk)
+  - [x] Surface max size and duration limits in the upload UI before user selects a file
+  - [x] Add server-side file size validation with proper error messages
+  - ⏳ Optionally trim or downsample very long tracks (server-side or pre-upload)
 
 ---
 
@@ -44,9 +45,13 @@ Status legend: ✅ done · 🔄 in progress · ⏳ planned
   - `/status/{job_id}` reads from disk if not in memory
 - ✅ Background cleanup
   - Daily thread cleans up old job JSON files (default: older than 7 days)
-- ⏳ Planned: DB-backed job store
-  - [ ] Add `jobs` table (Postgres) with status, progress, input/output paths, user id, timestamps
-  - [ ] Migrate `/separate` and `/status/{job_id}` to use DB as the source of truth
+- ✅ DB-backed job store
+  - [x] Add `jobs` table (Postgres) with status, progress, input/output paths, user id, timestamps
+  - [x] Add `user_quotas` table for rate limiting
+  - [x] Add `job_metrics` table for monitoring
+  - [x] Migrate `/separate` and `/status/{job_id}` to use DB as the source of truth
+  - [x] Add SQLAlchemy repository pattern for database operations
+  - [x] Configure environment for both SQLite (dev) and PostgreSQL (production)
 
 ---
 
@@ -60,9 +65,11 @@ Status legend: ✅ done · 🔄 in progress · ⏳ planned
   - Frontend refuses to call backend with empty Clerk token when Clerk is configured
 - ✅ CORS configuration
   - Backend CORS based on `ALLOWED_ORIGINS`, with `["*"]` only in debug
-- ⏳ Planned: Abuse protection & quotas
-  - [ ] Simple per-IP and per-user quotas for separation jobs
-  - [ ] Tiered limits (anonymous vs authenticated)
+- ✅ Abuse protection & quotas
+  - [x] Simple per-IP and per-user quotas for separation jobs
+  - [x] Database-backed quota tracking with hourly/daily limits
+  - [x] Proper error messages for rate limit violations
+  - ⏳ Tiered limits (anonymous vs authenticated)
 
 ---
 
@@ -85,11 +92,15 @@ Status legend: ✅ done · 🔄 in progress · ⏳ planned
 
 ### 6. UX & Documentation
 
-- 🔄 TODO: UX polish
-  - [ ] Update copy that still implies “processing happens in your browser” now that heavy lifting is on the backend
-  - [ ] Add clear messaging around processing time and queueing when under load
-  - [ ] Improve mobile layout for upload/process/results screens where needed
-- ⏳ Planned: Developer docs
-  - [ ] Root `README` with architecture diagram and local dev instructions
-  - [ ] Short runbook: how to deploy, check `/health`, inspect logs, and handle common failures
+- ✅ UX polish
+  - [x] Update copy that still implies "processing happens in your browser" now that heavy lifting is on the backend
+  - [x] Add clear messaging around processing time and queueing when under load
+  - [x] Improve mobile layout for upload/process/results screens where needed
+  - [x] Enhanced file upload constraints with dynamic backend fetching
+  - [x] Real-time queue position and estimated wait times
+- ✅ Developer docs
+  - [x] Root `README` with architecture diagram and local dev instructions
+  - [x] Comprehensive deployment runbook with troubleshooting
+  - [x] Database schema documentation
+  - [x] Environment variable configuration guides
 
