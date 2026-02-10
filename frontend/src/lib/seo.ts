@@ -53,11 +53,7 @@ export function defaultMetadata(): Metadata {
     keywords: ['stem separation', 'audio processing', 'AI music', 'vocal removal', 'music production', 'audio mixer', 'audio engineer', 'audio stems'],
     authors: [{ name: 'StemSplit Team', url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app' }],
     creator: 'StemSplit',
-    publisher: {
-      '@type': 'Organization',
-      name: 'StemSplit',
-      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app',
-    },
+    publisher: 'StemSplit',
     robots: {
       index: true,
       follow: true,
