@@ -1,0 +1,35 @@
+name: Auto PR to main
+on:
+  push:
+    branches:
+      - phase7-final-robust
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Create PR to main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${GITHUB_REPOSITORY}"
+          HEAD="phase7-final-robust"
+          BASE="main"
+          TITLE="Automated PR: ${HEAD} -> ${BASE}"
+          BODY="This PR was created automatically by the workflow on push to ${HEAD}.\n\nChanges:\n- Pin typings for wavesurfer to 6.0.12 in frontend\n- Update lockfile\n\nPlease merge if checks pass."
+          RESPONSE=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls" \
+            -d "{\"title\":\"${TITLE}\",\"head\":\"${HEAD}\",\"base\":\"${BASE}\",\"body\":\"${BODY}\"}")
+          PR_URL=$(echo "$RESPONSE" | jq -r '.html_url')
+          if [ "$PR_URL" != "null" ]; then
+            echo "PR created: $PR_URL"
+          else
+            echo "PR creation failed. Response: $RESPONSE"
+            exit 0
+          fi
