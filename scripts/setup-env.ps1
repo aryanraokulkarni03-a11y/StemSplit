@@ -105,8 +105,8 @@ if ($setupFrontend -ne "n" -and $setupFrontend -ne "N") {
         $clerkSecretKey = Get-UserInput -prompt "Clerk Secret Key" -required $true -validator "clerk_secret"
         $enableAuth = "true"
     } else {
-        $clerkPublicKey = "pk_test_placeholder"
-        $clerkSecretKey = "sk_test_placeholder"
+        $clerkPublicKey = "pk_test_CLERK_PLACEHOLDER_KEY"
+        $clerkSecretKey = "sk_test_CLERK_PLACEHOLDER_KEY"
         $enableAuth = "false"
         Write-Host "  ℹ️  Auth disabled - using placeholder keys" -ForegroundColor Gray
     }
