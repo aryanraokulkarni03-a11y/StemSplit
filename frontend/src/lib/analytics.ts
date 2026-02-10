@@ -154,13 +154,13 @@ export const GAEvents = {
         });
     },
 
-    // Conversion Events
+// Conversion Events
     conversion: (conversionType: string, value?: number) => {
         event({
             action: 'conversion',
             category: 'Conversions',
             label: conversionType,
-            value: value,
+            ...(value !== undefined && { value }),
         });
     },
 } as const;
