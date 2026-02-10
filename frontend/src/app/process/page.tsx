@@ -348,8 +348,8 @@ return () => {
                                 className="h-full bg-amber-600 transition-all duration-300"
                                 style={{ width: `${status.progress}%` }}
                             />
-                            {/* Hatching texture overlay */}
-                            <div className="absolute inset-0 w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.2)_5px,rgba(0,0,0,0.2)_10px)] opacity-50" />
+{/* Hatching texture overlay */}
+                            <div className="absolute inset-0 w-full h-full opacity-50 bg-gradient-to-br from-amber-600/20 via-orange-600/40 to-amber-800/20" />
                         </div>
                         <span className="font-mono text-xs text-[#F2E8DC] w-10 text-right">{Math.round(status.progress)}%</span>
                     </div>
