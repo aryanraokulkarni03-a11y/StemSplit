@@ -250,11 +250,11 @@ return () => {
         <AuthWrapper requireAuth={true} fallback={<div className="min-h-screen bg-background text-foreground flex items-center justify-center"><div className="text-lg">Loading...</div></div>}>
             <div className="min-h-screen bg-background text-foreground p-4 sm:p-8">
 
-    // handleCancel removed as it was unused
+// handleCancel removed as it was unused
 
     const handleRetry = useCallback(() => {
         setError(null);
-        setRetryCount(c => c + 1);
+        setRetryCount(prev => prev + 1);
     }, []);
 
     // Map stem names to icons

@@ -18,67 +18,16 @@ export const ProgressBar = React.memo(function ProgressBar({ status, onCancel }:
         if (rounded < 60) return `${rounded}s`;
         const mins = Math.floor(rounded / 60);
         const secs = rounded % 60;
-        return `${mins}m ${secs}s`;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
-
-    const getStageIcon = () => {
-        switch (stage) {
-            case 'complete':
-                return <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
-            case 'error':
-                return <AlertCircle className="w-6 h-6 text-red-500" />;
-            default:
-                return <Loader2 className="w-6 h-6 text-sky-500 animate-spin" />;
-        }
-    };
-
-    const getProgressColor = () => {
-        switch (stage) {
-            case 'complete':
-                return 'bg-emerald-500';
-            case 'error':
-                return 'bg-red-500';
-            default:
-                return 'bg-gradient-to-r from-sky-500 to-emerald-500';
-        }
-    };
-
-    if (stage === 'idle') return null;
 
     return (
-        <div className="w-full max-w-2xl mx-auto p-6 rounded-2xl bg-white/5 border border-white/10">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    {getStageIcon()}
-                    <div>
-                        <p className="font-medium">{message}</p>
-                        {estimatedTimeRemaining && stage === 'processing' && (
-                            <p className="text-sm text-foreground/60">
-                                ~{formatTime(estimatedTimeRemaining)} remaining
-                            </p>
-                        )}
-                    </div>
-                </div>
-                {stage !== 'complete' && stage !== 'error' && onCancel && (
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                )}
-            </div>
-
+        <div className="w-full bg-zinc-900/50 rounded-lg p-8">
             {/* Progress Bar */}
-            <Progress.Root
-                className="relative h-3 overflow-hidden rounded-full bg-white/10"
-                value={progress}
-            >
-                <Progress.Indicator
-                    className={`h-full transition-all duration-500 ease-out ${getProgressColor()}`}
-                    style={{ width: `${progress}%` }}
-                />
+            <Progress.Root className="w-full" value={progress}>
+                <Progress.Indicator className="h-2 w-full rounded-full bg-zinc-800 relative overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full transition-all duration-500 ease-out" />
+                </Progress.Indicator>
             </Progress.Root>
 
             {/* Progress Percentage */}
@@ -97,14 +46,15 @@ export const ProgressBar = React.memo(function ProgressBar({ status, onCancel }:
     );
 });
 
+// Button Component
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'tactile';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     icon?: React.ReactNode;
 }
 
-export const Button = React.memo(function Button({
+export const ButtonComponent = React.memo(function Button({
     children,
     variant = 'primary',
     size = 'md',
@@ -144,3 +94,6 @@ export const Button = React.memo(function Button({
         </button>
     );
 });
+
+ButtonComponent.displayName = 'Button';
+export const Button = ButtonComponent;
