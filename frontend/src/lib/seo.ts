@@ -1,206 +1,98 @@
-/**
- * SEO Metadata Configuration
- * 
- * Centralized SEO metadata for all pages
- * Includes Open Graph, Twitter Cards, and structured data
- */
-
 import type { Metadata } from 'next';
 
-// Determine a safe site URL for metadata. In CI or misconfigured environments,
-// env vars can be empty strings, which would break `new URL()`. Fall back to
-// a valid default to keep builds stable.
-const envSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || '').trim();
-const siteUrl = envSiteUrl || 'https://example.com';
-const siteName = 'AI Music Platform';
-const siteDescription = 'AI-powered audio separation platform. Separate vocals, instruments, and stems from any audio file with cutting-edge AI technology.';
-
-export const defaultMetadata: Metadata = {
-    metadataBase: new URL(siteUrl),
-    title: {
-        default: `${siteName} - AI-Powered Audio Separation`,
-        template: `%s | ${siteName}`,
-    },
-    description: siteDescription,
-    keywords: [
-        'AI audio separation',
-        'stem separation',
-        'vocal isolation',
-        'music production',
-        'audio processing',
-        'AI music tools',
-        'vocal remover',
-        'instrumental extraction',
-        'karaoke maker',
-        'audio stems',
-    ],
-    authors: [{ name: siteName }],
-    creator: siteName,
-    publisher: siteName,
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-        },
-    },
-    openGraph: {
-        type: 'website',
-        locale: 'en_US',
-        url: siteUrl,
-        siteName,
-        title: `${siteName} - AI-Powered Audio Separation`,
-        description: siteDescription,
-        images: [
-            {
-                url: `${siteUrl}/og-image.png`,
-                width: 1200,
-                height: 630,
-                alt: siteName,
-            },
-        ],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: `${siteName} - AI-Powered Audio Separation`,
-        description: siteDescription,
-        images: [`${siteUrl}/twitter-image.png`],
-        creator: '@aimusicplatform',
-    },
-    alternates: {
-        canonical: siteUrl,
-    },
-    verification: {
-        google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-        // yandex: 'yandex-verification-code',
-        // bing: 'bing-verification-code',
-    },
-};
-
-/**
- * Generate page-specific metadata
- */
-export function generatePageMetadata({
-    title,
-    description,
-    path = '',
-    image,
-    noIndex = false,
-}: {
-    title: string;
-    description: string;
-    path?: string;
-    image?: string;
-    noIndex?: boolean;
-}): Metadata {
-    const url = `${siteUrl}${path}`;
-    const ogImage = image || `${siteUrl}/og-image.png`;
-
-    return {
-        title,
-        description,
-        alternates: {
-            canonical: url,
-        },
-        openGraph: {
-            title,
-            description,
-            url,
-            images: [
-                {
-                    url: ogImage,
-                    width: 1200,
-                    height: 630,
-                    alt: title,
-                },
-            ],
-        },
-        twitter: {
-            title,
-            description,
-            images: [ogImage],
-        },
-        robots: noIndex
-            ? {
-                index: false,
-                follow: false,
-            }
-            : undefined,
-    };
-}
-
-/**
- * Structured Data (JSON-LD) generators
- */
 export function generateOrganizationSchema() {
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: siteName,
-        url: siteUrl,
-        logo: `${siteUrl}/logo.png`,
-        description: siteDescription,
-        sameAs: [
-            'https://twitter.com/aimusicplatform',
-            'https://github.com/aimusicplatform',
-            'https://linkedin.com/company/aimusicplatform',
-        ],
-        contactPoint: {
-            '@type': 'ContactPoint',
-            email: 'contact@aimusicplatform.com',
-            contactType: 'Customer Service',
-        },
-    };
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'StemSplit',
+    description: 'AI-powered music stem separation platform',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app',
+    logo: process.env.NEXT_PUBLIC_SITE_URL 
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/favicon.ico`
+      : '/favicon.ico',
+    contact: {
+      '@type': 'ContactPoint',
+      email: 'support@stemsplit.app',
+      url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/contact` : '/contact',
+    },
+    sameAs: ['https://github.com/aryanraokulkarni03-a11y/StemSplit'],
+  };
 }
 
 export function generateWebsiteSchema() {
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: siteName,
-        url: siteUrl,
-        description: siteDescription,
-        potentialAction: {
-            '@type': 'SearchAction',
-            target: `${siteUrl}/search?q={search_term_string}`,
-            'query-input': 'required name=search_term_string',
-        },
-    };
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'StemSplit',
+    description: 'Professional AI-powered music stem separation',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app',
+    inLanguage: 'en-US',
+    isAccessibleForFree: true,
+    isPartOf: {
+      '@type': 'CreativeWork',
+      name: 'StemSplit',
+      url: process.env.NEXT_PUBLIC_SITE_URL,
+    },
+    about: {
+      '@type': 'WebPage',
+      name: 'About',
+      url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/about` : '/about',
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${process.env.NEXT_PUBLIC_SITE_URL}/api/upload`,
+      'query-input': 'audio_file_search',
+    },
+  };
 }
 
-export function generateSoftwareApplicationSchema() {
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: siteName,
-        applicationCategory: 'MultimediaApplication',
-        operatingSystem: 'Web Browser',
-        offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'USD',
+export function defaultMetadata(): Metadata {
+  return {
+    title: 'StemSplit - AI-Powered Music Stem Separation',
+    description: 'Professional-grade audio stem separation using advanced AI technology. Separate vocals, drums, bass, and more from any music file.',
+    keywords: ['stem separation', 'audio processing', 'AI music', 'vocal removal', 'music production', 'audio mixer', 'audio engineer', 'audio stems'],
+    authors: [{ name: 'StemSplit Team', url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app' }],
+    creator: 'StemSplit',
+    publisher: {
+      '@type': 'Organization',
+      name: 'StemSplit',
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/sitemap.xml` : '/sitemap.xml',
+    },
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://stem-split-bice.vercel.app',
+      title: 'StemSplit - AI-Powered Music Stem Separation',
+      description: 'Professional-grade audio stem separation using advanced AI technology.',
+      images: [
+        {
+          url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/og-image.jpg` : '/og-image.jpg',
+          width: 1200,
+          height: 630,
+          alt: 'StemSplit - AI Audio Processing',
         },
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '4.8',
-            ratingCount: '1250',
-        },
-    };
-}
-
-export function generateBreadcrumbSchema(items: { name: string; url: string }[]) {
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: items.map((item, index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: item.name,
-            item: `${siteUrl}${item.url}`,
-        })),
-    };
+      ],
+    },
+    twitter: {
+      handle: process.env.NEXT_PUBLIC_SITE_URL ? '@stemsplitapp' : '@stemsplit',
+      card: 'summary_large_image',
+      title: 'StemSplit - AI-Powered Music Stem Separation',
+      description: 'Professional-grade audio stem separation using advanced AI.',
+      images: {
+        width: 1200,
+        height: 630,
+        alt: 'StemSplit - AI Audio Processing',
+      },
+    },
+    viewport: {
+      width: 'device-width',
+      initialScale: 1,
+      maximumScale: 1,
+    },
+  };
 }
