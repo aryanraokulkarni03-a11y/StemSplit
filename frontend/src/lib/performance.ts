@@ -5,6 +5,14 @@
  * Integrates with Vercel Analytics and custom analytics
  */
 
+// Type definitions for global window extensions
+declare global {
+    interface Window {
+        gtag?: (command: string, eventName: string, params?: Record<string, any>) => void;
+        va?: (command: string, eventName: string, params?: Record<string, any>) => void;
+    }
+}
+
 /**
  * Web Vitals metrics
  */
@@ -85,8 +93,8 @@ export function reportWebVitals(metric: WebVitalsMetric) {
     }
 
     // Send to Google Analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', metric.name, {
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', metric.name, {
             value: Math.round(metric.value),
             metric_id: metric.id,
             metric_value: metric.value,
@@ -96,8 +104,8 @@ export function reportWebVitals(metric: WebVitalsMetric) {
     }
 
     // Send to Vercel Analytics
-    if (typeof window !== 'undefined' && (window as any).va) {
-        (window as any).va('track', metric.name, {
+    if (typeof window !== 'undefined' && window.va) {
+        window.va('track', metric.name, {
             value: metric.value,
             rating: metric.rating,
         });
@@ -125,15 +133,16 @@ export const PerformanceMark = {
     },
 
     /**
-     * Mark the end of an operation and measure duration
+     * Mark end of an operation and measure duration
      */
     end(name: string) {
         if (typeof window !== 'undefined' && window.performance) {
             performance.mark(`${name}-end`);
             performance.measure(name, `${name}-start`, `${name}-end`);
 
-            const measure = performance.getEntriesByName(name)[0];
-            if (measure) {
+            const measures = performance.getEntriesByName(name);
+            if (measures.length > 0) {
+                const measure = measures[0];
                 console.log(`[Performance] ${name}: ${Math.round(measure.duration)}ms`);
             }
         }
@@ -159,8 +168,10 @@ export function getResourceTiming(resourceUrl: string) {
         return null;
     }
 
-    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    const resource = resources.find((r) => r.name.includes(resourceUrl));
+    const resources = performance.getEntriesByType('resource');
+    const resource = resources.find((r): r is PerformanceResourceTiming => 
+        'name' in r && 'transferSize' in r && r.name.includes(resourceUrl)
+    );
 
     if (!resource) {
         return null;
@@ -171,6 +182,6 @@ export function getResourceTiming(resourceUrl: string) {
         duration: Math.round(resource.duration),
         size: resource.transferSize,
         cached: resource.transferSize === 0,
-        protocol: resource.nextHopProtocol,
+        protocol: 'nextHopProtocol' in resource ? resource.nextHopProtocol : 'unknown',
     };
 }

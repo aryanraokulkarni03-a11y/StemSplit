@@ -54,22 +54,28 @@ export default function ResultsPage() {
 
             // Convert stored results to StemResult format
             const stemResults: StemResult[] = storedResults
-                .filter(r => STEM_CONFIG[r.name]) // Filter out stale stems (drums, bass, etc.)
-                .map(r => ({
-                    name: r.name as StemResult['name'], // Safe cast after filter
-                    label: r.label,
-                    color: r.color,
-                    audioBuffer: null,
-                    blob: null, // Will be recreated from URL if needed
-                    url: r.url,
-                    isPlaying: false,
+                .filter(r => {
+                    const config = STEM_CONFIG[r.name as keyof typeof STEM_CONFIG];
+                    return !!config; // Filter out stale stems (drums, bass, etc.)
+                })
+                .map(r => {
+                    const config = STEM_CONFIG[r.name as keyof typeof STEM_CONFIG];
+                    return {
+                        name: r.name as StemResult['name'],
+                        label: r.label,
+                        color: r.color,
+                        audioBuffer: null,
+                        blob: null, // Will be recreated from URL if needed
+                        url: r.url,
+                        isPlaying: false,
                     volume: 1,
-                }));
+                }
+            });
 
             setStems(stemResults);
             setLoading(false);
-        } catch {
-            console.error('Error loading results');
+        } catch (err) {
+            console.error('Error loading results:', err);
             router.push('/');
         }
     }, [router]);

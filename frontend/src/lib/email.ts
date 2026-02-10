@@ -14,9 +14,30 @@
 
 import { Resend } from 'resend';
 
+// Type definitions for email responses
+export interface EmailResponse {
+    success: boolean;
+    data?: any;
+    error?: string | Error;
+}
+
 // Lazily initialize Resend so builds don't fail when RESEND_API_KEY is missing.
 let resendClient: Resend | null = null;
 let resendInitWarningLogged = false;
+
+// Sanitize input for HTML emails to prevent injection
+function sanitizeHtmlInput(input: string): string {
+    return input
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
+function getBaseUrl(): string {
+    return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://localhost:3000';
+}
 
 function getResendClient(): Resend | null {
     const apiKey = process.env.RESEND_API_KEY;
@@ -42,7 +63,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
 /**
  * Send welcome email to new users
  */
-export async function sendWelcomeEmail(to: string, name: string) {
+export async function sendWelcomeEmail(to: string, name: string): Promise<EmailResponse> {
     const resend = getResendClient();
     if (!resend) {
         console.log('[Email] Skipping welcome email send (email service not configured).');
@@ -55,29 +76,29 @@ export async function sendWelcomeEmail(to: string, name: string) {
             to,
             subject: 'Welcome to AI Music Platform',
             html: `
-        <h1>Welcome, ${name}!</h1>
+        <h1>Welcome, ${sanitizeHtmlInput(name)}!</h1>
         <p>Thank you for signing up for AI Music Platform.</p>
         <p>Get started by exploring our interactive demo and features.</p>
-        <p><a href="${process.env.NEXTAUTH_URL}/dashboard">Go to Dashboard</a></p>
+        <p><a href="${getBaseUrl()}/dashboard">Go to Dashboard</a></p>
       `,
         });
 
         if (error) {
             console.error('Welcome email error:', error);
-            return { success: false, error };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         }
 
         return { success: true, data };
     } catch (error) {
         console.error('Welcome email error:', error);
-        return { success: false, error };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
 /**
  * Send demo confirmation email
  */
-export async function sendDemoConfirmationEmail(to: string, name: string) {
+export async function sendDemoConfirmationEmail(to: string, name: string): Promise<EmailResponse> {
     const resend = getResendClient();
     if (!resend) {
         console.log('[Email] Skipping demo confirmation email send (email service not configured).');
@@ -90,21 +111,21 @@ export async function sendDemoConfirmationEmail(to: string, name: string) {
             to,
             subject: 'Demo Request Received - AI Music Platform',
             html: `
-        <h1>Thank you for your interest, ${name}!</h1>
+        <h1>Thank you for your interest, ${sanitizeHtmlInput(name)}!</h1>
         <p>We've received your demo request and will get back to you within 24-48 hours.</p>
-        <p>In the meantime, feel free to explore our <a href="${process.env.NEXTAUTH_URL}">interactive demo</a>.</p>
+        <p>In the meantime, feel free to explore our <a href="${getBaseUrl()}">interactive demo</a>.</p>
       `,
         });
 
         if (error) {
             console.error('Demo confirmation email error:', error);
-            return { success: false, error };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         }
 
         return { success: true, data };
     } catch (error) {
         console.error('Demo confirmation email error:', error);
-        return { success: false, error };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
@@ -115,7 +136,7 @@ export async function sendPasswordResetEmail(
     to: string,
     name: string,
     resetUrl: string
-) {
+): Promise<EmailResponse> {
     const resend = getResendClient();
     if (!resend) {
         console.log('[Email] Skipping password reset email send (email service not configured).');
@@ -129,7 +150,7 @@ export async function sendPasswordResetEmail(
             subject: 'Password Reset Request - AI Music Platform',
             html: `
         <h1>Password Reset Request</h1>
-        <p>Hi ${name},</p>
+        <p>Hi ${sanitizeHtmlInput(name)},</p>
         <p>We received a request to reset your password. Click the link below to reset it:</p>
         <p><a href="${resetUrl}">Reset Password</a></p>
         <p>This link will expire in 1 hour.</p>
@@ -139,13 +160,13 @@ export async function sendPasswordResetEmail(
 
         if (error) {
             console.error('Password reset email error:', error);
-            return { success: false, error };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         }
 
         return { success: true, data };
     } catch (error) {
         console.error('Password reset email error:', error);
-        return { success: false, error };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
@@ -157,7 +178,7 @@ export async function sendContactNotification(data: {
     email: string;
     subject: string;
     message: string;
-}) {
+}): Promise<EmailResponse> {
     const resend = getResendClient();
     if (!resend) {
         console.log('[Email] Skipping contact notification email send (email service not configured).');
@@ -169,24 +190,24 @@ export async function sendContactNotification(data: {
             from: FROM_EMAIL,
             to: ADMIN_EMAIL,
             replyTo: data.email,
-            subject: `Contact Form: ${data.subject}`,
+            subject: `Contact Form: ${sanitizeHtmlInput(data.subject)}`,
             html: `
         <h2>New Contact Form Submission</h2>
-        <p><strong>From:</strong> ${data.name} (${data.email})</p>
-        <p><strong>Subject:</strong> ${data.subject}</p>
+        <p><strong>From:</strong> ${sanitizeHtmlInput(data.name)} (${sanitizeHtmlInput(data.email)})</p>
+        <p><strong>Subject:</strong> ${sanitizeHtmlInput(data.subject)}</p>
         <p><strong>Message:</strong></p>
-        <p>${data.message.replace(/\n/g, '<br>')}</p>
+        <p>${sanitizeHtmlInput(data.message).replace(/\n/g, '<br>')}</p>
       `,
         });
 
         if (error) {
             console.error('Contact notification email error:', error);
-            return { success: false, error };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         }
 
         return { success: true, data: emailData };
     } catch (error) {
         console.error('Contact notification email error:', error);
-        return { success: false, error };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }

@@ -98,12 +98,13 @@ const handleFile = useCallback(async (file: File) => {
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
-
+        // Ensure we don't process drops while disabled
         if (disabled) return;
-
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            handleFile(file);
+        
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file) handleFile(file);
         }
     }, [disabled, handleFile]);
 
@@ -111,6 +112,10 @@ const handleFile = useCallback(async (file: File) => {
         e.preventDefault();
         if (!disabled) {
             setIsDragging(true);
+        }
+        // Improve drop UX by indicating a copy operation
+        try { e.dataTransfer.dropEffect = 'copy'; } catch {
+            // no-op in environments that disallow setting dropEffect
         }
     }, [disabled]);
 
@@ -120,9 +125,10 @@ const handleFile = useCallback(async (file: File) => {
     }, []);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            handleFile(file);
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file) handleFile(file);
         }
     }, [handleFile]);
 
@@ -134,14 +140,14 @@ const handleFile = useCallback(async (file: File) => {
         setError(null);
     }, [selectedFile]);
 
-    // Cleanup on unmount
+    // Cleanup on unmount and when file changes
     React.useEffect(() => {
         return () => {
             if (selectedFile?.url) {
                 URL.revokeObjectURL(selectedFile.url);
             }
         };
-    }, []); // Only on unmount. If selectedFile changes, clearFile already handles revocation.
+    }, [selectedFile?.url]); // Cleanup URL when file changes or unmounts
 
     // formatFileSize and formatDuration removed as they were unused
 

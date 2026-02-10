@@ -38,7 +38,7 @@ export default function HomePage() {
         formData.append('file', selectedFile.file);
 
         // Upload directly to the FastAPI backend to avoid Vercel file system limits
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:8000';
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
         const response = await fetch(`${backendUrl}/upload`, {
           method: 'POST',
@@ -53,11 +53,15 @@ export default function HomePage() {
         const data = await response.json();
 
         // Store file info (including backend inputPath) in sessionStorage for processing page
-        sessionStorage.setItem('audioFile', JSON.stringify({
-          name: data.fileName,
-          inputPath: data.inputPath,
-          duration: selectedFile.duration,
-        }));
+        try {
+          sessionStorage.setItem('audioFile', JSON.stringify({
+            name: data.fileName,
+            inputPath: data.inputPath,
+            duration: selectedFile.duration,
+          }));
+        } catch (error) {
+          console.error('Failed to store file data:', error);
+        }
 
         // Navigate to processing page
         router.push('/process');
@@ -208,7 +212,12 @@ export default function HomePage() {
             </p>
             <Button
               size="lg"
-              onClick={() => document.getElementById('upload')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => {
+                const uploadElement = document.getElementById('upload');
+                if (uploadElement) {
+                  uploadElement.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
               icon={<ArrowRight className="w-5 h-5" />}
             >
               Get Started Free

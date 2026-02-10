@@ -71,12 +71,20 @@ export async function PATCH(request: NextRequest) {
         const validatedData = profileUpdateSchema.parse(body);
 
         // Update user
+        // Build a safe update payload; avoid sending undefined
+        const updateData: any = {};
+        const nameVal = validatedData.name;
+        if (typeof validatedData.name === 'string') updateData.name = validatedData.name as string;
+        // preferences is optional in the schema
+        if ((validatedData as any).preferences !== undefined) updateData.preferences = (validatedData as any).preferences;
+
+        if (Object.keys(updateData).length === 0) {
+          return NextResponse.json({ message: 'No changes provided' }, { status: 200 });
+        }
+
         const updatedUser = await prisma.user.update({
             where: { id: (session.user as any).id },
-            data: {
-                name: validatedData.name,
-                // Add other updatable fields here
-            },
+            data: updateData,
             select: {
                 id: true,
                 name: true,

@@ -27,7 +27,11 @@ export function audioBufferToTensor(buffer: AudioBuffer): Float32Array {
     const right = buffer.getChannelData(1);
 
     for (let i = 0; i < length; i++) {
-        mono[i] = (left[i] + right[i]) / 2;
+        const leftVal = left[i];
+        const rightVal = right[i];
+        if (leftVal !== undefined && rightVal !== undefined) {
+            mono[i] = (leftVal + rightVal) / 2;
+        }
     }
 
     return mono;
@@ -44,7 +48,10 @@ export function tensorToAudioBuffer(
     const buffer = audioContext.createBuffer(1, tensor.length, sampleRate);
     const channelData = buffer.getChannelData(0);
     for (let i = 0; i < tensor.length; i++) {
-        channelData[i] = tensor[i];
+            const value = tensor[i];
+            if (value !== undefined) {
+                channelData[i] = value;
+            }
     }
     return buffer;
 }
@@ -87,7 +94,9 @@ export function audioBufferToWav(buffer: AudioBuffer): Blob {
     let offset = 44;
     for (let i = 0; i < samples; i++) {
         for (let channel = 0; channel < numChannels; channel++) {
-            const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+            const channelData = buffer.getChannelData(channel);
+            const sampleValue = channelData[i];
+            const sample = Math.max(-1, Math.min(1, sampleValue ?? 0));
             const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
             view.setInt16(offset, intSample, true);
             offset += 2;
@@ -129,7 +138,7 @@ export function createSilentBuffer(
     sampleRate: number = 44100
 ): AudioBuffer {
     const audioContext = new AudioContext();
-    const length = duration * sampleRate;
+    const length = Math.floor(duration * sampleRate);
     return audioContext.createBuffer(1, length, sampleRate);
 }
 
@@ -211,7 +220,9 @@ function createFilteredBuffer(
         for (let i = 0; i < inputData.length; i++) {
             // Add slight optimization: use local var for loop speed
             const val = inputData[i];
-            outputData[i] = val * scale;
+            if (val !== undefined) {
+                outputData[i] = val * scale;
+            }
         }
     }
 

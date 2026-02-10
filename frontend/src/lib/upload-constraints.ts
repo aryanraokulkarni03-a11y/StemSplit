@@ -13,13 +13,23 @@ export interface UploadConstraints {
  * Fetches upload constraints from the backend
  */
 export async function fetchUploadConstraints(): Promise<UploadConstraints> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/constraints`);
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!baseUrl) {
+    throw new Error('NEXT_PUBLIC_BACKEND_URL is not configured');
+  }
+
+  const response = await fetch(`${baseUrl}/upload/constraints`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch upload constraints');
   }
   
-  return response.json();
+  try {
+    const data = await response.json() as UploadConstraints;
+    return data;
+  } catch (error) {
+    throw new Error('Failed to parse upload constraints response');
+  }
 }
 
 /**

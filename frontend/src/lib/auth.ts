@@ -1,10 +1,33 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, DefaultSession, DefaultUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import prisma from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
+
+// Extend the built-in types
+declare module 'next-auth' {
+    interface Session {
+        user: {
+            id: string;
+            role: string;
+        } & DefaultSession['user'];
+        accessToken?: string;
+    }
+
+    interface User extends DefaultUser {
+        role: string;
+    }
+}
+
+declare module 'next-auth/jwt' {
+    interface JWT {
+        id: string;
+        role: string;
+        accessToken?: string;
+    }
+}
 
 /**
  * NextAuth Configuration
@@ -87,11 +110,11 @@ export const authOptions: NextAuthOptions = {
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
 
-callbacks: {
+    callbacks: {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                token.role = (user as any).role || 'user';
+                token.role = user.role || 'user';
                 // Add the raw token as accessToken for API calls
                 token.accessToken = token.jti || '';
             }
@@ -99,15 +122,21 @@ callbacks: {
         },
 
         async session({ session, token }) {
-            if (session.user) {
-                (session.user as any).id = token.id;
-                (session.user as any).role = token.role;
-                (session as any).accessToken = token.accessToken;
+            if (session.user && token.id) {
+                session.user.id = token.id;
+                session.user.role = token.role;
+                session.accessToken = token.accessToken;
             }
             return session;
         },
     },
 
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: (() => {
+        const secret = process.env.NEXTAUTH_SECRET;
+        if (!secret) {
+            throw new Error('NEXTAUTH_SECRET is not defined');
+        }
+        return secret;
+    })(),
     debug: process.env.NODE_ENV === 'development',
 };

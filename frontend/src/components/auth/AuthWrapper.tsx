@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 interface AuthWrapperProps {
     children: ReactNode;
@@ -11,7 +11,7 @@ interface AuthWrapperProps {
     requireAuth?: boolean;
 }
 
-export const AuthWrapper = React.memo(function AuthWrapper({ 
+export const AuthWrapper = memo(function AuthWrapper({ 
     children, 
     fallback = <div>Loading...</div>,
     requireAuth = true 
@@ -29,7 +29,7 @@ export const AuthWrapper = React.memo(function AuthWrapper({
         if (requireAuth && status === 'unauthenticated' && !isPublicPath) {
             router.push('/sign-in?callbackUrl=' + encodeURIComponent(pathname));
         }
-    }, [requireAuth, status, router, pathname, isPublicPath]);
+    }, [requireAuth, status, pathname, isPublicPath]);
 
     // If not authenticated and auth is required, show fallback
     if (requireAuth && status === 'unauthenticated' && !isPublicPath) {

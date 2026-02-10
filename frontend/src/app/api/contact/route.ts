@@ -70,12 +70,12 @@ export async function POST(request: NextRequest) {
             },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Contact form error:', error);
 
-        if (error.name === 'ZodError') {
+        if (error instanceof Error && error.name === 'ZodError') {
             return NextResponse.json(
-                { error: 'Invalid input data', details: error.errors },
+                { error: 'Invalid input data', details: (error as any).errors },
                 { status: 400 }
             );
         }

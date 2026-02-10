@@ -25,9 +25,14 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Get the token (user session)
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+        throw new Error('NEXTAUTH_SECRET is not defined');
+    }
+    
     const token = await getToken({
         req: request,
-        secret: process.env.NEXTAUTH_SECRET,
+        secret,
     });
 
     const isAuthenticated = !!token;

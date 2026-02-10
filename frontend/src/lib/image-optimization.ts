@@ -72,7 +72,19 @@ export function generateBlurDataURL(width: number = 10, height: number = 10): st
       <rect width="${width}" height="${height}" fill="#f0f0f0"/>
     </svg>
   `;
-    return `data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`;
+    
+    // Use browser-compatible base64 encoding
+    if (typeof window !== 'undefined' && typeof btoa !== 'undefined') {
+        return `data:image/svg+xml;base64,${btoa(canvas)}`;
+    }
+    
+    // Fallback for Node.js environment (SSR)
+    if (typeof Buffer !== 'undefined') {
+        return `data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`;
+    }
+    
+    // Simple fallback
+    return `data:image/svg+xml,${canvas}`;
 }
 
 /**

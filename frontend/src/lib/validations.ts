@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 
 /**
  * Validation Schemas
@@ -40,12 +40,13 @@ export type ContactInput = z.infer<typeof contactSchema>;
 // Profile Update Schema
 export const profileUpdateSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters').optional(),
-    preferences: z.record(z.any()).optional(),
+    preferences: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 
 // HTML Sanitization Helper
+// NOTE: For production, consider using DOMPurify library for comprehensive sanitization
 export function sanitizeHtml(input: string): string {
     return input
         .replace(/</g, '&lt;')

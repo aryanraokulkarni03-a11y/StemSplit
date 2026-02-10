@@ -7,7 +7,7 @@
 'use client';
 
 import Image, { ImageProps } from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface OptimizedImageProps extends Omit<ImageProps, 'onError' | 'onLoad'> {
     fallbackSrc?: string;
@@ -22,6 +22,13 @@ export function OptimizedImage({
     const [imgSrc, setImgSrc] = useState(src);
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
+
+    // Reset state when src changes
+    useEffect(() => {
+        setImgSrc(src);
+        setIsLoading(true);
+        setHasError(false);
+    }, [src]);
 
     return (
         <div className="relative overflow-hidden">

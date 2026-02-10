@@ -5,6 +5,13 @@
  * Integrates with Sentry, LogRocket, or custom error tracking
  */
 
+// Type definition for window globals
+declare global {
+    interface Window {
+        gtag?: (command: 'config' | 'set' | 'event', targetId?: string, params?: Record<string, any>) => void;
+    }
+}
+
 /**
  * Error severity levels
  */
@@ -30,7 +37,7 @@ export interface ErrorContext {
         method?: string;
         headers?: Record<string, string>;
     };
-    extra?: Record<string, any>;
+    extra?: Record<string, string | number | boolean | object>;
 }
 
 /**
@@ -61,8 +68,8 @@ function sendToAnalytics(
     severity: ErrorSeverity,
     context?: ErrorContext
 ) {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'exception', {
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'exception', {
             description: error.message,
             fatal: severity === ErrorSeverity.FATAL,
             ...context?.extra,
