@@ -7,7 +7,11 @@
 
 import type { Metadata } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aimusicplatform.com';
+// Determine a safe site URL for metadata. In CI or misconfigured environments,
+// env vars can be empty strings, which would break `new URL()`. Fall back to
+// a valid default to keep builds stable.
+const envSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || '').trim();
+const siteUrl = envSiteUrl || 'https://example.com';
 const siteName = 'AI Music Platform';
 const siteDescription = 'AI-powered audio separation platform. Separate vocals, instruments, and stems from any audio file with cutting-edge AI technology.';
 
