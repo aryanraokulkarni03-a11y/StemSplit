@@ -145,23 +145,23 @@ function SignInContent() {
                 </div>
 
                 <div className="oauth-buttons">
-                    <button
+<button
                         onClick={() => handleOAuthSignIn('google')}
                         className="oauth-button"
                         data-provider="google"
                         disabled={isLoading}
                     >
-                        <span className="oauth-icon">{/* Google icon */}</span>
+                        <span className="oauth-icon">🔍</span>
                         Google
                     </button>
 
-                    <button
+<button
                         onClick={() => handleOAuthSignIn('github')}
                         className="oauth-button"
                         data-provider="github"
                         disabled={isLoading}
                     >
-                        <span className="oauth-icon">{/* GitHub icon */}</span>
+                        <span className="oauth-icon">🐙</span>
                         GitHub
                     </button>
                 </div>

@@ -6,7 +6,7 @@ import { Music2, AlertCircle } from 'lucide-react';
 // ProgressBar removed as it was unused
 import { ProcessingStatus, StemResult, STEM_CONFIG } from '@/types/audio';
 import { audioBufferToWav } from '@/lib/audio-utils';
-import { useAuth } from "@clerk/nextjs";
+import { useSession, signIn } from "next-auth/react";
 
 export default function ProcessPage() {
     const router = useRouter();
@@ -17,8 +17,23 @@ export default function ProcessPage() {
     });
     const [error, setError] = useState<string | null>(null);
 
-    const { getToken } = useAuth();
+    const { data: session, status: authStatus } = useSession();
     const [retryCount, setRetryCount] = useState(0);
+
+    // Get JWT token for API calls
+    const getApiToken = async () => {
+        if (!session) return null;
+        
+        try {
+            // Get token from our token API
+            const response = await fetch('/api/auth/token');
+            const tokenData = await response.json();
+            return tokenData.accessToken;
+        } catch (error) {
+            console.error('Failed to get API token:', error);
+            return null;
+        }
+    };
 
     useEffect(() => {
         let isCancelled = false;
@@ -35,8 +50,14 @@ export default function ProcessPage() {
 
             const fileInfo = JSON.parse(fileInfoStr);
 
-            try {
-                const token = await getToken();
+try {
+                const token = await getApiToken();
+                
+                if (!token) {
+                    // Redirect to sign-in if not authenticated
+                    router.push('/sign-in?callbackUrl=' + encodeURIComponent(window.location.pathname));
+                    return;
+                }
 
                 // 1. Trigger Separation
                 setStatus({

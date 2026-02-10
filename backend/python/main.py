@@ -12,6 +12,9 @@ import threading
 from pathlib import Path
 from processor import AudioProcessor
 import shutil
+import base64
+import jwt
+from datetime import datetime
 
 # Database imports
 from database.config import init_database, get_db_session
@@ -56,56 +59,52 @@ app.add_middleware(
 # Global lock for GPU protection (RTX 3050 safe)
 gpu_lock = threading.Lock()
 
-# Clerk Configuration
-CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "https://clerk.clerk.dev/.well-known/jwks.json")
-CLERK_ISSUER = os.getenv("CLERK_ISSUER", "https://clerk.clerk.dev")
-
-# In-memory cache for JWKS
-jwks_cache = {"keys": None, "expiry": 0}
-JWKS_CACHE_TTL = 3600 # 1 hour
+# NextAuth Configuration
+NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET")
+NEXTAUTH_URL = os.getenv("NEXTAUTH_URL", "http://localhost:3000")
 
 security = HTTPBearer()
 
-async def get_jwks():
-    """Fetch and cache JWKS from Clerk."""
-    now = time.time()
-    if jwks_cache["keys"] and now < jwks_cache["expiry"]:
-        return jwks_cache["keys"]
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(CLERK_JWKS_URL)
-            jwks_cache["keys"] = response.json()
-            jwks_cache["expiry"] = now + JWKS_CACHE_TTL
-            return jwks_cache["keys"]
-    except Exception as e:
-        print(f"[Auth] JWKS fetch failed: {e}")
-        return jwks_cache["keys"] # Return stale keys if fetch fails
-
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verifies the Clerk JWT token."""
+    """Verifies the NextAuth token."""
     token = credentials.credentials
 
     # Dev mode bypass - accept dev token from frontend (development only)
-    if DEBUG and token == "dev_token_no_auth":
+    if DEBUG and (token == "dev_token_no_auth" or token == "dev_token"):
         print("[Auth] Dev mode token accepted")
-        return {"sub": "dev_user"}
+        return {"sub": "dev_user", "email": "dev@example.com"}
 
     try:
-        jwks = await get_jwks()
-
-        payload = jwt.decode(
-            token,
-            jwks,
-            algorithms=["RS256"],
-            issuer=CLERK_ISSUER,
-            options={"verify_at_hash": False}
-        )
-        return payload
+        # Handle simple base64 encoded token (from our /api/auth/token endpoint)
+        if token.startswith('eyJ'):
+            # This is a JWT
+            if NEXTAUTH_SECRET:
+                payload = jwt.decode(
+                    token,
+                    NEXTAUTH_SECRET,
+                    algorithms=["HS256"]
+                )
+                if not payload.get("sub"):
+                    raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
+                return payload
+            else:
+                raise HTTPException(status_code=401, detail="NEXTAUTH_SECRET not configured")
+        else:
+            # This is our base64 encoded token
+            try:
+                decoded_bytes = base64.b64decode(token)
+                payload = json.loads(decoded_bytes.decode('utf-8'))
+                if not payload.get("sub"):
+                    raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
+                return payload
+            except Exception as e:
+                raise HTTPException(status_code=401, detail=f"Invalid token format: {str(e)}")
+                
     except Exception as e:
-        # Fallback for development if no keys are provided yet
-        if DEBUG and not os.getenv("CLERK_JWKS_URL"):
-            return {"sub": "dev_user"}
+        # Fallback for development if no secret is provided yet
+        if DEBUG and not NEXTAUTH_SECRET:
+            print(f"[Auth] No NEXTAUTH_SECRET provided, allowing dev mode")
+            return {"sub": "dev_user", "email": "dev@example.com"}
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
 
