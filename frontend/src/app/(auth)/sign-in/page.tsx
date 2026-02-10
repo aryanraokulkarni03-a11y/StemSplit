@@ -19,7 +19,11 @@ type SignInInput = z.infer<typeof signInSchema>;
 function SignInContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+    const callbackUrl = searchParams.get('callbackUrl');
+    const validCallbackUrl =
+        callbackUrl && callbackUrl.startsWith('/')
+            ? callbackUrl
+            : '/dashboard';
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -41,6 +45,7 @@ function SignInContent() {
                 email: data.email,
                 password: data.password,
                 redirect: false,
+                callbackUrl: validCallbackUrl,
             });
 
             if (result?.error) {
@@ -48,7 +53,7 @@ function SignInContent() {
                 return;
             }
 
-            router.push(callbackUrl);
+            router.push(validCallbackUrl);
             router.refresh();
         } catch (err) {
             setError('An error occurred. Please try again.');
@@ -59,7 +64,7 @@ function SignInContent() {
 
     const handleOAuthSignIn = async (provider: 'google' | 'github') => {
         setIsLoading(true);
-        await signIn(provider, { callbackUrl });
+        await signIn(provider, { callbackUrl: validCallbackUrl });
     };
 
     return (
