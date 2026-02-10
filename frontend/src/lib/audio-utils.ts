@@ -174,8 +174,8 @@ export async function simulateStemSeparation(
         // Simulate processing work
         await new Promise(resolve => setTimeout(resolve, TIME_PER_STEM));
 
-        // For MVP demo: create filtered version of original audio
-        const stemBuffer = createFilteredBuffer(audioBuffer, stemName);
+// For MVP demo: create filtered version of original audio
+        const stemBuffer = createFilteredBuffer(audioBuffer, stemName!);
         stems.set(stemName, stemBuffer);
 
         // End of stem processing
