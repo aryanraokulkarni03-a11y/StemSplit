@@ -37,22 +37,25 @@ export default function HomePage() {
         const formData = new FormData();
         formData.append('file', selectedFile.file);
 
-        const response = await fetch('/api/upload', {
+        // Upload directly to the FastAPI backend to avoid Vercel file system limits
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:8000';
+
+        const response = await fetch(`${backendUrl}/upload`, {
           method: 'POST',
           body: formData,
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || 'Failed to upload file to server');
+          const errorText = await response.text().catch(() => 'Unknown error');
+          throw new Error(errorText || 'Failed to upload file to server');
         }
 
         const data = await response.json();
 
-        // Store file info in sessionStorage for processing page
+        // Store file info (including backend inputPath) in sessionStorage for processing page
         sessionStorage.setItem('audioFile', JSON.stringify({
-          name: data.file.name,
-          size: data.file.size,
+          name: data.fileName,
+          inputPath: data.inputPath,
           duration: selectedFile.duration,
         }));
 

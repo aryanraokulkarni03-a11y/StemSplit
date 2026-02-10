@@ -52,10 +52,29 @@ export default function ProcessPage() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ fileName: fileInfo.name }),
+                    body: JSON.stringify({
+                        fileName: fileInfo.name,
+                        inputPath: fileInfo.inputPath,
+                    }),
                 });
 
-                if (!startResponse.ok) throw new Error('Failed to start separation job');
+                if (!startResponse.ok) {
+                    let message = 'Failed to start separation job';
+
+                    try {
+                        const errorBody = await startResponse.json() as { error?: string; code?: string; retryAfterSeconds?: number };
+                        if (errorBody?.code === 'RATE_LIMITED') {
+                            message = errorBody.error ??
+                                `Too many separation requests. Please wait ${errorBody.retryAfterSeconds ?? 60} seconds and try again.`;
+                        } else if (errorBody?.error) {
+                            message = errorBody.error;
+                        }
+                    } catch {
+                        // ignore JSON parse errors and fall back to default message
+                    }
+
+                    throw new Error(message);
+                }
 
                 const { statusEndpoint } = await startResponse.json();
 
@@ -67,7 +86,25 @@ export default function ProcessPage() {
                         const statusRes = await fetch(statusEndpoint, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
-                        if (!statusRes.ok) return; // Skip this tick if network blip
+
+                        if (!statusRes.ok) {
+                            if (statusRes.status === 404) {
+                                throw new Error('Separation job not found or has expired. Please start a new separation.');
+                            }
+
+                            // For 5xx or other errors, try to surface backend message if available
+                            let message = 'Temporary issue contacting the AI engine. Please wait a moment and retry.';
+                            try {
+                                const errorBody = await statusRes.json();
+                                if (errorBody?.error) {
+                                    message = errorBody.error;
+                                }
+                            } catch {
+                                // ignore JSON parse errors and keep default message
+                            }
+
+                            throw new Error(message);
+                        }
 
                         const jobStatus = await statusRes.json();
 
@@ -145,12 +182,22 @@ export default function ProcessPage() {
 
                             if (!isCancelled) router.push('/results');
                         } else if (jobStatus.status === 'failed' || jobStatus.status === 'error') {
-                            throw new Error(jobStatus.error || 'Job failed on backend');
+                            throw new Error(jobStatus.error || 'Separation job failed on the backend.');
                         }
 
                     } catch (pollErr) {
                         console.error('Polling error', pollErr);
-                        // Don't fail immediately on one poll error, but maybe track consecutive failures
+                        if (!isCancelled) {
+                            clearInterval(pollInterval);
+                            const message = pollErr instanceof Error ? pollErr.message : 'An error occurred while checking job status.';
+                            setError(message);
+                            setStatus({
+                                stage: 'error',
+                                progress: 0,
+                                message,
+                                error: message,
+                            });
+                        }
                     }
                 }, 2000);
 

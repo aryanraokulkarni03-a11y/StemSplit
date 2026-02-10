@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import { checkRateLimit, getClientIp, RateLimits } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -10,6 +11,7 @@ type StemType = typeof STEM_TYPES[number];
 interface SeparationRequest {
     fileId?: string;
     fileName: string;
+    inputPath?: string;
     stems?: StemType[];
 }
 
@@ -19,6 +21,29 @@ const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 // POST /api/separate - Initiate REAL stem separation using Demucs
 export async function POST(request: NextRequest) {
     try {
+        // Basic rate limiting to prevent abuse of expensive separation jobs
+        const ip = getClientIp(request.headers);
+        const rate = checkRateLimit(ip, RateLimits.STRICT);
+
+        if (!rate.allowed) {
+            return NextResponse.json(
+                {
+                    error: 'Too many separation requests. Please wait before trying again.',
+                    code: 'RATE_LIMITED',
+                    limit: rate.limit,
+                    retryAfterSeconds: rate.resetIn,
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rate.resetIn),
+                        'X-RateLimit-Limit': String(rate.limit),
+                        'X-RateLimit-Remaining': String(rate.remaining),
+                    },
+                }
+            );
+        }
+
         let token: string | null = null;
 
         // Only attempt auth if Clerk is configured
@@ -37,16 +62,16 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json() as SeparationRequest;
 
-        if (!body.fileName) {
-            return NextResponse.json({ error: 'fileName is required' }, { status: 400 });
+        if (!body.fileName && !body.inputPath) {
+            return NextResponse.json({ error: 'fileName or inputPath is required' }, { status: 400 });
         }
 
         // Generate job ID and paths
         const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const outputDir = path.join(process.cwd(), 'public', 'separated', jobId);
 
-        // Input file path
-        const inputFilePath = path.join(process.cwd(), 'public', 'uploads', body.fileName);
+        // Input file path - prefer backend-provided path when available
+        const inputFilePath = body.inputPath ?? path.join(process.cwd(), 'public', 'uploads', body.fileName);
 
         console.log(`[API] Triggering FastAPI job for file ${inputFilePath}`);
 

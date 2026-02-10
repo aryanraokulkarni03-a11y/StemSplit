@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ import json
 import threading
 from pathlib import Path
 from processor import AudioProcessor
+import shutil
 
 # Environment & configuration
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
@@ -21,6 +22,10 @@ ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins_env.split(",") i
 # Directory for persistent job metadata
 JOB_STORE_DIR = Path(os.getenv("JOB_STORE_DIR", "./job_state")).resolve()
 JOB_STORE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Directory for audio uploads
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads")).resolve()
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Singscape AI Engine", version="1.0.0")
 
@@ -127,10 +132,58 @@ def load_job(job_id: str):
 
     return None
 
+
+def cleanup_old_jobs(max_age_seconds: int = 7 * 24 * 60 * 60) -> None:
+    """
+    Remove old job metadata files from disk to prevent unbounded growth.
+
+    This does not delete audio files; it only cleans JSON state in JOB_STORE_DIR.
+    """
+    now = time.time()
+    cutoff = now - max_age_seconds
+
+    try:
+        for path in JOB_STORE_DIR.glob("*.json"):
+            try:
+                stat = path.stat()
+                if stat.st_mtime < cutoff:
+                    path.unlink(missing_ok=True)
+            except Exception as e:
+                print(f"[Jobs] Failed to inspect or delete {path}: {e}")
+    except Exception as e:
+        print(f"[Jobs] Cleanup sweep failed: {e}")
+
 class SeparationRequest(BaseModel):
     input_path: str
     output_dir: str
     stems: int = 2
+
+
+@app.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    auth: dict = Depends(verify_token),
+):
+    """
+    Accept an audio file upload and save it on the backend.
+
+    Returns a fileName and inputPath that can be used by /separate.
+    """
+    try:
+        raw_name = file.filename or "audio"
+        safe_name = raw_name.replace(" ", "_")
+        dest_path = UPLOAD_DIR / safe_name
+
+        with dest_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        return {
+            "fileName": safe_name,
+            "inputPath": str(dest_path),
+        }
+    except Exception as e:
+        print(f"[Upload] Error saving file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file")
 
 def run_separation_task(job_id: str, input_path: str, output_dir: str, stems: int):
     """Background task to run Demucs with concurrency protection."""
@@ -246,6 +299,17 @@ async def startup_warmup():
     except Exception as e:
         # Do not block startup, but log for debugging
         print(f"[Startup] Audio engine warmup failed: {e}")
+
+    # Schedule periodic cleanup of old job metadata (once per day)
+    def _schedule_cleanup():
+        while True:
+            print("[Jobs] Running periodic cleanup sweep...")
+            cleanup_old_jobs()
+            # Sleep for 24 hours between sweeps
+            time.sleep(24 * 60 * 60)
+
+    cleanup_thread = threading.Thread(target=_schedule_cleanup, daemon=True)
+    cleanup_thread.start()
 
 if __name__ == "__main__":
     import uvicorn
