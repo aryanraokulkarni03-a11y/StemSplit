@@ -3,10 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Music2, AlertCircle } from 'lucide-react';
-// ProgressBar removed as it was unused
 import { ProcessingStatus, StemResult, STEM_CONFIG } from '@/types/audio';
 import { audioBufferToWav } from '@/lib/audio-utils';
 import { useSession, signIn } from "next-auth/react";
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 export default function ProcessPage() {
     const router = useRouter();
@@ -239,11 +239,16 @@ try {
 
         runProcessing();
 
-        return () => {
+return () => {
             isCancelled = true;
             if (pollInterval) clearInterval(pollInterval);
         };
     }, [router, retryCount]);
+
+    // Main component JSX
+    return (
+        <AuthWrapper requireAuth={true} fallback={<div className="min-h-screen bg-background text-foreground flex items-center justify-center"><div className="text-lg">Loading...</div></div>}>
+            <div className="min-h-screen bg-background text-foreground p-4 sm:p-8">
 
     // handleCancel removed as it was unused
 
@@ -356,7 +361,9 @@ try {
                     </div>
                 </div>
 
+</div>
             </div>
         </div>
+        </AuthWrapper>
     );
 }

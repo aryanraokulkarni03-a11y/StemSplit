@@ -12,7 +12,7 @@ export async function GET() {
 
         // Create a simple token for API calls using user data
         const tokenData = {
-            sub: session.user?.id || session.user?.email,
+            sub: session.user?.email,
             email: session.user?.email,
             name: session.user?.name,
             iat: Math.floor(Date.now() / 1000),

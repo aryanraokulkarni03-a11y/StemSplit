@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ArrowRight, Music2, Zap, Shield, Download } from 'lucide-react';
-import { Button } from '@/components/ui/ProgressBar';
+import { Button } from '@/components/ui/Button';
 import { AudioFile } from '@/types/audio';
 
 const FileUpload = dynamic(

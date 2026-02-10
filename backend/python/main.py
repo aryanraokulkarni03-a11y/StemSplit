@@ -15,10 +15,18 @@ import shutil
 import base64
 import jwt
 from datetime import datetime
+from dotenv import load_dotenv
 
 # Database imports
 from database.config import init_database, get_db_session
 from database.repositories import JobRepository, JobMetricRepository, UserQuotaRepository
+
+# Load environment variables
+load_dotenv()
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
 
 # Environment & configuration
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
@@ -42,10 +50,14 @@ app = FastAPI(title="Singscape AI Engine", version="1.0.0")
 
 # Initialize database on startup
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     """Initialize database and perform startup tasks"""
-    init_database()
-    print("[Backend] Database initialized successfully")
+    try:
+        init_database()
+        print("[Backend] Database initialized successfully")
+    except Exception as e:
+        print(f"[Backend] Database initialization failed: {e}")
+        raise
 
 # Enable CORS for Next.js frontend
 cors_origins = ALLOWED_ORIGINS or (["*"] if DEBUG else [])
@@ -464,4 +476,5 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
+    print(f"[Backend] Starting server on {host}:{port}")
     uvicorn.run(app, host=host, port=port)
