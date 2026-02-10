@@ -23,7 +23,7 @@ export const isGAEnabled = (): boolean => {
 export const pageview = (url: string) => {
     if (!isGAEnabled()) return;
 
-    window.gtag('config', GA_MEASUREMENT_ID, {
+    window.gtag?.('config', GA_MEASUREMENT_ID, {
         page_path: url,
     });
 };
@@ -62,7 +62,7 @@ export const event = ({ action, category, label, value }: GAEvent) => {
 export const setUserProperties = (properties: Record<string, string | number | boolean>) => {
     if (!isGAEnabled()) return;
 
-    window.gtag('set', 'user_properties', properties);
+    window.gtag?.('set', 'user_properties', properties);
 };
 
 /**
@@ -181,7 +181,7 @@ export const ecommerce = {
     purchase: (transactionId: string, value: number, items: EcommerceItem[]) => {
         if (!isGAEnabled()) return;
 
-        window.gtag('event', 'purchase', {
+        window.gtag?.('event', 'purchase', {
             transaction_id: transactionId,
             value: value,
             currency: 'USD',
@@ -192,7 +192,7 @@ export const ecommerce = {
     addToCart: (item: EcommerceItem) => {
         if (!isGAEnabled()) return;
 
-        window.gtag('event', 'add_to_cart', {
+        window.gtag?.('event', 'add_to_cart', {
             items: [item],
         });
     },
