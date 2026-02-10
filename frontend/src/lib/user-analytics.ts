@@ -225,7 +225,12 @@ export function calculateEngagementScore(): number {
     if (!session) return 0;
 
     try {
-        const data = JSON.parse(session);
+        let data: any;
+        try {
+            data = JSON.parse(session);
+        } catch {
+            return 0;
+        }
 
         // Simple engagement score calculation
         // Adjust weights as needed

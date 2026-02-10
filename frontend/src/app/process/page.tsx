@@ -42,7 +42,7 @@ export default function ProcessPage() {
     let pollInterval: NodeJS.Timeout;
 
     const runProcessing = async () => {
-      // Get file info from sessionStorage
+// Get file info from sessionStorage
       const fileInfoStr = sessionStorage.getItem("audioFile");
 
       if (!fileInfoStr) {
@@ -50,7 +50,13 @@ export default function ProcessPage() {
         return;
       }
 
-      const fileInfo = JSON.parse(fileInfoStr);
+      let fileInfo: any;
+      try {
+        fileInfo = JSON.parse(fileInfoStr);
+      } catch {
+        setError("Invalid file data.");
+        return;
+      }
 
       try {
         const token = await getApiToken();
