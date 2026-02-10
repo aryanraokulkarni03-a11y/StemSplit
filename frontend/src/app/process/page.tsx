@@ -245,26 +245,20 @@ return () => {
         };
     }, [router, retryCount]);
 
-    // Main component JSX
-    return (
-        <AuthWrapper requireAuth={true} fallback={<div className="min-h-screen bg-background text-foreground flex items-center justify-center"><div className="text-lg">Loading...</div></div>}>
-            <div className="min-h-screen bg-background text-foreground p-4 sm:p-8">
+// Map stem names to icons
+    // getStemIcon removed as it was unused
 
-// handleCancel removed as it was unused
-
+    // handleCancel removed as it was unused
     const handleRetry = useCallback(() => {
         setError(null);
         setRetryCount(prev => prev + 1);
     }, []);
 
-    // Map stem names to icons
-    // getStemIcon removed as it was unused
-
+    // Main component JSX
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-leather" data-testid="process-page-container">
-            <div className="w-full max-w-2xl relative z-10">
-
-{/* Rack Mount Header */}
+        <AuthWrapper requireAuth={true} fallback={<div className="min-h-screen bg-background text-foreground flex items-center justify-center"><div className="text-lg">Loading...</div></div>}>
+            <div className="min-h-screen bg-background text-foreground p-4 sm:p-8">
+                {/* Rack Mount Header */}
                 <div className="bg-metal-dark p-4 sm:p-6 rounded-t-lg border-x border-t border-[#45362C] shadow-2xl relative overflow-hidden">
                     {/* Screws */}
                     <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-700 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-black rotate-45" /></div>
