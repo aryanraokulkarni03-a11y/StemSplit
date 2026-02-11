@@ -8,7 +8,7 @@
 // Type definitions for global window extensions
 declare global {
     interface Window {
-        gtag?: (command: string, eventName: string, params?: Record<string, any>) => void;
+        gtag?: (command: "set" | "config" | "event", targetId?: string | undefined, params?: Record<string, any> | undefined) => void;
         va?: (command: string, eventName: string, params?: Record<string, any>) => void;
     }
 }
@@ -141,9 +141,9 @@ export const PerformanceMark = {
             performance.measure(name, `${name}-start`, `${name}-end`);
 
             const measures = performance.getEntriesByName(name);
-            if (measures.length > 0) {
+if (measures.length > 0) {
                 const measure = measures[0];
-                console.log(`[Performance] ${name}: ${Math.round(measure.duration)}ms`);
+                console.log(`[Performance] ${name}: ${Math.round(measure.duration ?? 0)}ms`);
             }
         }
     },
